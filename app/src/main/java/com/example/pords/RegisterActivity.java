@@ -31,10 +31,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.firebase.database.ValueEventListener;
-
-import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -127,6 +127,7 @@ public class RegisterActivity extends AppCompatActivity {
 
         //Register click
         reg_register.setOnClickListener(new View.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
 
@@ -138,8 +139,7 @@ public class RegisterActivity extends AppCompatActivity {
                 final String email = reg_email.getText().toString().trim();
                 final String date = reg_date.getText().toString().trim();
                 final String phone = reg_phone.getText().toString().trim();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
-                final String time = sdf.format(new Date());
+                String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
                 final String location = getLocation();
 
                 boolean failFlag = false;

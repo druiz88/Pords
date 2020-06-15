@@ -81,15 +81,23 @@ public class ListAdapter extends ArrayAdapter<String> implements View.OnClickLis
 
         final Map<String, FloatingActionButton> playerList = new HashMap<>();
 
-        final String splat = users.get(i);
+
+        final String match_id = users.get(i);
         database = FirebaseDatabase.getInstance();
 
         if (users != null) {
             TextView name = view.findViewById(R.id.textName);
             if (name != null) {
-                name.setText(splat);
+                name.setText(match_id);
             }
         }
+
+        itemfab = view.findViewById(R.id.fab5);
+        itemfab2 = view.findViewById(R.id.fab6);
+        itemfab3 = view.findViewById(R.id.fab7);
+
+
+
 
         return view;
     }
