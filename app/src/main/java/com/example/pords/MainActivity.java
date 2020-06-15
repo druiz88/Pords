@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                             String pass = dataSnapshot.child(key).child("Password").getValue(String.class);
                             assert pass != null;
                             if (pass.equals(etpass)) {
-                                loginUser(key, etuser);
+                                loginUser(etuser);
                                 Toast.makeText(MainActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(MainActivity.this, LobbyActivity.class);
                                 intent.putExtra("player", etuser);
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void loginUser(String key, String user){
+    private void loginUser(String user){
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
         final String starts = sdf.format(new Date());
@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
 
         logRef.child(logkey).child("User").setValue(user);
         logRef.child(logkey).child("Starts").setValue(starts);
-        logRef.child(logkey).child("Ends").setValue("-");
         logRef.child(logkey).child("Location").setValue(location);
     }
 
