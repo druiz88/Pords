@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1071613347448",
+    "firebase_url": "https://pords-eef7a.firebaseio.com",
+    "project_id": "pords-eef7a",
+    "storage_bucket": "pords-eef7a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1071613347448:android:678658d5ec373ff6924f8d",
+        "android_client_info": {
+          "package_name": "com.example.pords"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1071613347448-acanl10454uqnf9i6b3kvkj5cuq5thja.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG_1JHZ3faftkSLI5aMG_PnztTQw-2Drw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1071613347448-acanl10454uqnf9i6b3kvkj5cuq5thja.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
