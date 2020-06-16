@@ -217,7 +217,6 @@ public class RegisterActivity extends AppCompatActivity {
                     if (userExists && emailExists && phoneExists) {
                         key = userRef.push().getKey();
                         assert key != null;
-                        Log.d("key", key);
                         final DatabaseReference usersData = userRef.child(key);
                         registerUser(usersData, name, lname, user, pass, email, date, phone, time, location);
                         Toast.makeText(RegisterActivity.this, "User successfully registered", Toast.LENGTH_SHORT).show();
