@@ -17,6 +17,7 @@
             android:id="@+id/tvName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
             android:textColor="#000"
             android:textStyle="bold"
             android:layout_weight="1"
@@ -45,11 +46,11 @@
             android:text="Button" />
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/lob_abandon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Button" />
+            android:text="ABANDON" />
     </LinearLayout>
 
     <LinearLayout

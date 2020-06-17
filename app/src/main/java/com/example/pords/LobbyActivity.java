@@ -9,7 +9,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -57,7 +56,8 @@ public class LobbyActivity extends AppCompatActivity {
         lob_create = findViewById(R.id.lob_create);
         tvName = findViewById(R.id.tvName);
 
-        tvName.setText(playerName);
+        String splat = "User: " + playerName;
+        tvName.setText(splat);
 
         matchList = new ArrayList<>();
 
@@ -120,7 +120,7 @@ public class LobbyActivity extends AppCompatActivity {
                 Iterable<DataSnapshot> matches = dataSnapshot.getChildren();
                 for(DataSnapshot snapshot : matches){
                     matchList.add(snapshot.getKey());
-                    adapter = new com.example.pords.ListAdapter(LobbyActivity.this, R.layout.activity_list_adapter, matchList, playerName);
+                    adapter = new com.example.pords.ListAdapter(LobbyActivity.this, R.layout.activity_list_adapter, matchList, playerName, playerID);
                     listView.setAdapter(adapter);
                 }
             }
@@ -146,7 +146,7 @@ public class LobbyActivity extends AppCompatActivity {
         DatabaseReference matchData = database.getReference("Matches_Data/" + matchID);
         matchData.child("Player1").setValue(playerName);
         matchData.child("Created").setValue(Time);
-        matchData.child("Players").setValue(Long.parseLong(nPlayers));
+        matchData.child("Size").setValue(Long.parseLong(nPlayers));
 
         DatabaseReference userData = database.getReference("Users/" + playerID);
         userData.child("In_Match").setValue(matchID);

@@ -15,6 +15,10 @@
         android:usesCleartextTraffic="true"
         tools:ignore="LockedOrientationActivity"
         tools:targetApi="m">
+        <activity android:name=".MatchActivity"
+            android:screenOrientation="landscape"
+            tools:ignore="LockedOrientationActivity">
+        </activity>
         <activity
             android:name=".LobbyActivity"
             android:screenOrientation="landscape"
