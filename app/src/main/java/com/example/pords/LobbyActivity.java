@@ -9,6 +9,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -60,6 +62,36 @@ public class LobbyActivity extends AppCompatActivity {
         tvName.setText(splat);
 
         matchList = new ArrayList<>();
+
+        //Send users in match to activity
+        final DatabaseReference userRef = database.getReference("Users/" + playerID).child("In_Match");
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final Long match_id = dataSnapshot.getValue(Long.class);
+                final DatabaseReference roleRef = database.getReference("Ongoing_Matches").child(String.valueOf(match_id)).child("Players").child(playerName).child("Role");
+                roleRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String role = snapshot.getValue(String.class);
+                        if(role!=null && role.equals("Guest")){
+                            Intent intent = new Intent(LobbyActivity.this, MatchActivity.class);
+                            intent.putExtra("playerName", playerName);
+                            intent.putExtra("playerID", playerID);
+                            intent.putExtra("match_id", match_id);
+                            startActivity(intent);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
 
         //Create Match
         lob_create.setOnClickListener(new View.OnClickListener() {

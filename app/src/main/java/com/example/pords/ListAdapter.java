@@ -6,8 +6,6 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Build;
-import android.renderscript.Sampler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,11 +22,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.graphics.drawable.DrawableCompat;
@@ -43,6 +40,9 @@ public class ListAdapter extends ArrayAdapter<String>{
     private Context context;
     FirebaseDatabase database;
     String playerName, playerID;
+    public Deck deck;
+    public Map<String, ArrayList<String>> handz;
+    public List<String> playerList;
 
 
     public ListAdapter(Context context, int textViewResourceId, List<String> userList, String playa, String playaID) {
@@ -135,12 +135,30 @@ public class ListAdapter extends ArrayAdapter<String>{
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                final DatabaseReference startRef = database.getReference("Match_Data/" + match_id);
+                final DatabaseReference startRef = database.getReference("Matches_Data/" + match_id);
                 String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
                 startRef.child("Start").setValue(time);
+                final DatabaseReference matchPlayersRef = database.getReference("Ongoing_Matches/" + match_id);
+                matchPlayersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Long size = dataSnapshot.child("Size").getValue(Long.class);
+                        deal(size, match_id);
+                        for(DataSnapshot children: dataSnapshot.child("Players").getChildren()){
+                            if(children.getKey().equals(playerName)){
+                                matchPlayersRef.child("Players").child(children.getKey()).child("Role").setValue("Host");
+                            } else {
+                                matchPlayersRef.child("Players").child(children.getKey()).child("Role").setValue("Guest");
+                            }
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
                 Intent intent = new Intent(context, MatchActivity.class);
                 intent.putExtra("match", match_id);
-                intent.putExtra("player", playerName);
+                intent.putExtra("playerName", playerName);
                 intent.putExtra("playerID", playerID);
                 context.startActivity(intent);
             }
@@ -274,6 +292,52 @@ public class ListAdapter extends ArrayAdapter<String>{
                 });
 
             }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
+    private void deal(Long match_size, String match_id){
+
+        playerList = new ArrayList<>();
+        deck = new Deck();
+
+        handz = deck.dealHands(match_size.intValue());
+
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(deck.arrayDeck().toString());
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Discard Pile").child("Hand").setValue("-");
+
+        final ArrayList<String> Order = new ArrayList<>();
+        for (int c = 0; c < match_size; c++) {
+            Order.add(String.valueOf(c + 1));
+        }
+        Collections.shuffle(Order);
+
+        final DatabaseReference playersRef = database.getReference("Ongoing_Matches/" + match_id);
+
+        playersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            int z = 0;
+
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                playerList.clear();
+                Iterable<DataSnapshot> players = dataSnapshot.child("Players").getChildren();
+                for (DataSnapshot snapshot : players) {
+                    String decker = snapshot.getKey();
+                    if (!decker.equals("Deck") && !decker.equals("Discard Pile")) {
+                        playersRef.child("Players").child(snapshot.getKey()).child("Order").setValue(Long.parseLong(Order.get(z)));
+                        playersRef.child("Players").child(snapshot.getKey()).child("Cards").setValue(11);
+                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + Order.get(z)).toString());
+                        z = z + 1;
+                    } else if (decker.equals("Deck")) {
+                        Long size = dataSnapshot.child("Size").getValue(Long.class);
+                        playersRef.child("Players").child("Deck").child("Cards").setValue(108 - 11*size);
+                    }
+                }
+
+            }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
