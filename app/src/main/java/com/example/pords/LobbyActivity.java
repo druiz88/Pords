@@ -65,20 +65,19 @@ public class LobbyActivity extends AppCompatActivity {
 
         //Send users in match to activity
         final DatabaseReference userRef = database.getReference("Users/" + playerID).child("In_Match");
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        userRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 final Long match_id = dataSnapshot.getValue(Long.class);
-                final DatabaseReference roleRef = database.getReference("Ongoing_Matches").child(String.valueOf(match_id)).child("Players").child(playerName).child("Role");
-                roleRef.addValueEventListener(new ValueEventListener() {
+                final DatabaseReference ongmatchRef = database.getReference("Matches_Data/" + match_id).child("Start");
+                ongmatchRef.addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        String role = snapshot.getValue(String.class);
-                        if(role!=null && role.equals("Guest")){
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if(dataSnapshot.exists()) {
                             Intent intent = new Intent(LobbyActivity.this, MatchActivity.class);
                             intent.putExtra("playerName", playerName);
                             intent.putExtra("playerID", playerID);
-                            intent.putExtra("match_id", match_id);
+                            intent.putExtra("match_id", String.valueOf(match_id));
                             startActivity(intent);
                         }
                     }

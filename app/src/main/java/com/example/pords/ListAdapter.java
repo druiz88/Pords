@@ -135,32 +135,20 @@ public class ListAdapter extends ArrayAdapter<String>{
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onClick(View v) {
-                final DatabaseReference startRef = database.getReference("Matches_Data/" + match_id);
-                String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-                startRef.child("Start").setValue(time);
                 final DatabaseReference matchPlayersRef = database.getReference("Ongoing_Matches/" + match_id);
                 matchPlayersRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long size = dataSnapshot.child("Size").getValue(Long.class);
-                        deal(size, match_id);
-                        for(DataSnapshot children: dataSnapshot.child("Players").getChildren()){
-                            if(children.getKey().equals(playerName)){
-                                matchPlayersRef.child("Players").child(children.getKey()).child("Role").setValue("Host");
-                            } else {
-                                matchPlayersRef.child("Players").child(children.getKey()).child("Role").setValue("Guest");
-                            }
-                        }
+                        deal(size,match_id);
+                        DatabaseReference matchesRef = database.getReference("Matches_Data/" + match_id);
+                        String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                        matchesRef.child("Start").setValue(time);
                     }
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                     }
                 });
-                Intent intent = new Intent(context, MatchActivity.class);
-                intent.putExtra("match", match_id);
-                intent.putExtra("playerName", playerName);
-                intent.putExtra("playerID", playerID);
-                context.startActivity(intent);
             }
         });
 
@@ -305,7 +293,7 @@ public class ListAdapter extends ArrayAdapter<String>{
 
         handz = deck.dealHands(match_size.intValue());
 
-        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(deck.arrayDeck().toString());
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(deck.arrayDeck());
         database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Discard Pile").child("Hand").setValue("-");
 
         final ArrayList<String> Order = new ArrayList<>();
@@ -342,6 +330,6 @@ public class ListAdapter extends ArrayAdapter<String>{
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         });
-    }
 
+    }
 }

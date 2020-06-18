@@ -12,6 +12,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -36,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationProviderClient;
     EditText et_user, et_pass;
-    Button btn_login, btn_reg;
+    Button btn_login, btn_reg, btn_purge;
     FirebaseDatabase database;
     String key, adLine;
 
@@ -57,6 +58,34 @@ public class MainActivity extends AppCompatActivity {
         et_pass = findViewById(R.id.log_pass);
         btn_login = findViewById(R.id.btn_login);
         btn_reg = findViewById(R.id.btn_reg);
+        btn_purge = findViewById(R.id.btn_purge);
+
+
+        btn_purge.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                database.getReference("Matches_Data").child("5471650401").child("Start").removeValue();
+                final DatabaseReference purgeRef = database.getReference("Ongoing_Matches").child("5471650401").child("Players");
+                purgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for(DataSnapshot snaps: dataSnapshot.getChildren()){
+                            if(snaps.getKey().equals("Deck") || snaps.getKey().equals("Discard Pile")){
+                                purgeRef.child(snaps.getKey()).removeValue();
+                            } else {
+                                purgeRef.child(snaps.getKey()).child("Cards").removeValue();
+                                purgeRef.child(snaps.getKey()).child("Hand").setValue("-");
+                                purgeRef.child(snaps.getKey()).child("Order").removeValue();
+                            }
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
+            }
+        });
+
 
         //Login button click
         btn_login.setOnClickListener(new View.OnClickListener() {
