@@ -140,7 +140,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long size = dataSnapshot.child("Size").getValue(Long.class);
                         deal(size,match_id);
-                        matchPlayersRef.child("Round").setValue(0);
+                        matchPlayersRef.child("Round").setValue(1);
                         DatabaseReference matchesRef = database.getReference("Matches_Data/" + match_id);
                         String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
                         matchesRef.child("Start").setValue(time);

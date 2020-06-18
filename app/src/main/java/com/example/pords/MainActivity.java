@@ -65,17 +65,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 database.getReference("Matches_Data").child("5471650401").child("Start").removeValue();
-                final DatabaseReference purgeRef = database.getReference("Ongoing_Matches").child("5471650401").child("Players");
+                final DatabaseReference purgeRef = database.getReference("Ongoing_Matches").child("5471650401");
                 purgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for(DataSnapshot snaps: dataSnapshot.getChildren()){
+                        for(DataSnapshot snaps: dataSnapshot.child("Players").getChildren()){
                             if(snaps.getKey().equals("Deck") || snaps.getKey().equals("Discard Pile")){
-                                purgeRef.child(snaps.getKey()).removeValue();
+                                purgeRef.child("Players").child(snaps.getKey()).removeValue();
                             } else {
-                                purgeRef.child(snaps.getKey()).child("Cards").removeValue();
-                                purgeRef.child(snaps.getKey()).child("Hand").setValue("-");
-                                purgeRef.child(snaps.getKey()).child("Order").removeValue();
+                                purgeRef.child("Players").child(snaps.getKey()).child("Cards").removeValue();
+                                purgeRef.child("Players").child(snaps.getKey()).child("Hand").setValue("-");
+                                purgeRef.child("Players").child(snaps.getKey()).child("Order").removeValue();
+                                purgeRef.child("Round").removeValue();
                             }
                         }
                     }

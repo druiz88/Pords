@@ -85,6 +85,15 @@ public class MatchActivity extends AppCompatActivity {
                         String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
                         Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
                         Long round = dataSnapshot.child("Round").getValue(Long.class);
+                        Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
+                        Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
+
+                        if(order.equals(round%nplayers)){
+                            btn_start.setEnabled(true);
+                        } else {
+                            btn_start.setEnabled(false);
+                        }
+
                         if(hand!=null && !hand.equals("-")) {
                             Log.d("round", String.valueOf(round));
                             Log.d("hand", hand);
@@ -154,6 +163,37 @@ public class MatchActivity extends AppCompatActivity {
     public void Sort(View views){
         Collections.sort(playerHand);
         updateHand(playerHand.toString());
+
+        DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id);
+        roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
+                Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
+                Long round = dataSnapshot.child("Round").getValue(Long.class);
+                Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
+                Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
+
+                if(order.equals(round%nplayers)){
+                    btn_start.setEnabled(true);
+                } else {
+                    btn_start.setEnabled(false);
+                }
+
+                if(hand!=null && !hand.equals("-")) {
+                    Log.d("round", String.valueOf(round));
+                    Log.d("hand", hand);
+                    Log.d("cards", String.valueOf(cards));
+                    String num = hand.substring(1, hand.length() - 1);
+                    String[] str = num.split(", ");
+                    playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
+                    drawCards(playerHand, cards);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
     }
 
     public void updateHand(String vHand){
