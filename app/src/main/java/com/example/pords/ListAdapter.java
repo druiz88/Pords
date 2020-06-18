@@ -293,7 +293,7 @@ public class ListAdapter extends ArrayAdapter<String>{
 
         handz = deck.dealHands(match_size.intValue());
 
-        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(deck.arrayDeck());
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(deck.arrayDeck().toString());
         database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Discard Pile").child("Hand").setValue("-");
 
         final ArrayList<String> Order = new ArrayList<>();

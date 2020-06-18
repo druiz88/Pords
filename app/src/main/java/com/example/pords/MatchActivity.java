@@ -86,10 +86,9 @@ public class MatchActivity extends AppCompatActivity {
                     String num = hand.substring(1, hand.length() - 1);
                     String[] str = num.split(", ");
                     playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
-                    brawCards(playerHand, cards);
+                    drawCards(playerHand, cards);
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
@@ -98,7 +97,7 @@ public class MatchActivity extends AppCompatActivity {
 
     }
 
-    public void brawCards(ArrayList<String> playaHand, Long ncards){
+    public void drawCards(ArrayList<String> playaHand, Long ncards){
         //Draw cards
         ViewGroup view = (ViewGroup)findViewById(R.id.linear);
 
@@ -142,29 +141,6 @@ public class MatchActivity extends AppCompatActivity {
         }
     }
 
-    public void drawHand(ArrayList<String> playaHand, Long ncards){
-
-        for(int k = 0; k < ncards; k++) {
-            String fnm = playaHand.get(k);
-            final ImageView img = new ImageView(this);
-            String PACKAGE_NAME = getApplicationContext().getPackageName();
-            int imgId = getResources().getIdentifier(PACKAGE_NAME+":drawable/"+fnm , null, null);
-            img.setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
-            img.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) img.getLayoutParams();
-                    if(params.gravity== Gravity.TOP){
-                        params.gravity = Gravity.BOTTOM;
-                    } else {
-                        params.gravity = Gravity.TOP;
-                    }
-                    img.setLayoutParams(params);
-                }
-            });
-        }
-    }
-
     public void Sort(View views){
         Collections.sort(playerHand);
         updateHand(playerHand.toString());
@@ -188,13 +164,14 @@ public class MatchActivity extends AppCompatActivity {
                 String[] str = num.split(", ");
                 assert dcards != null;
                 Log.d("dcards", dcards.toString());
-                ArrayList<String> decklist = new ArrayList<>(Arrays.asList(str).subList(0, dcards.intValue()-1));
+                ArrayList<String> decklist = new ArrayList<>(Arrays.asList(str).subList(0, dcards.intValue()));
                 String lcard = decklist.get(dcards.intValue()-1);
                 decklist.remove(dcards.intValue()-1);
                 Log.d("deck hand", decklist.toString());
                 Log.d("deck cards", String.valueOf(dcards.intValue()-1));
                 handRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
                 handRef.child("Players").child("Deck").child("Cards").setValue(dcards.intValue()-1);
+
 
                 String hand2 = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
                 Long dcards2 = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
@@ -208,24 +185,16 @@ public class MatchActivity extends AppCompatActivity {
                 Log.d("Hand", playerHand.toString());
                 handRef.child("Players").child(playerName).child("Cards").setValue(playerHand.size());
                 handRef.child("Players").child(playerName).child("Hand").setValue(playerHand.toString());
-
-                final DatabaseReference matchesRef = database.getReference("Matches_Data/" + match_id).child("Round");
-                matchesRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        Long round = dataSnapshot.getValue(Long.class);
-                        matchesRef.setValue(round+1);
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                    }
-                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         });
 
+    }
+
+    public void Start(View view){
+        drawCard();
     }
 
 
