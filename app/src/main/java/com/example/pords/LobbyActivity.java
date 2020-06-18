@@ -79,6 +79,7 @@ public class LobbyActivity extends AppCompatActivity {
                             intent.putExtra("playerID", playerID);
                             intent.putExtra("match_id", String.valueOf(match_id));
                             startActivity(intent);
+                            finish();
                         }
                     }
                     @Override

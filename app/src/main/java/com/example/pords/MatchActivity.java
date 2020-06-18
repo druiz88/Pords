@@ -74,26 +74,36 @@ public class MatchActivity extends AppCompatActivity {
 
 
         //Get cards values
-        DatabaseReference handsRef = database.getReference("Ongoing_Matches/" + match_id).child("Players").child(playerName);
-        handsRef.addValueEventListener(new ValueEventListener() {
+        DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id).child("Round");
+        roundRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String hand = dataSnapshot.child("Hand").getValue(String.class);
-                Long cards = dataSnapshot.child("Cards").getValue(Long.class);
-                if(hand!=null && !hand.equals("-")) {
-                    Log.d("hand", hand);
-                    Log.d("cards", String.valueOf(cards));
-                    String num = hand.substring(1, hand.length() - 1);
-                    String[] str = num.split(", ");
-                    playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
-                    drawCards(playerHand, cards);
-                }
+                DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id);
+                roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
+                        Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
+                        Long round = dataSnapshot.child("Round").getValue(Long.class);
+                        if(hand!=null && !hand.equals("-")) {
+                            Log.d("round", String.valueOf(round));
+                            Log.d("hand", hand);
+                            Log.d("cards", String.valueOf(cards));
+                            String num = hand.substring(1, hand.length() - 1);
+                            String[] str = num.split(", ");
+                            playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
+                            drawCards(playerHand, cards);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         });
-
 
     }
 
@@ -169,8 +179,6 @@ public class MatchActivity extends AppCompatActivity {
                 decklist.remove(dcards.intValue()-1);
                 Log.d("deck hand", decklist.toString());
                 Log.d("deck cards", String.valueOf(dcards.intValue()-1));
-                handRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
-                handRef.child("Players").child("Deck").child("Cards").setValue(dcards.intValue()-1);
 
 
                 String hand2 = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
@@ -183,8 +191,24 @@ public class MatchActivity extends AppCompatActivity {
                 playerHand.add(lcard);
                 Log.d("Player cards", String.valueOf(playerHand.size()));
                 Log.d("Hand", playerHand.toString());
+
+                handRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
+                handRef.child("Players").child("Deck").child("Cards").setValue(dcards.intValue()-1);
                 handRef.child("Players").child(playerName).child("Cards").setValue(playerHand.size());
                 handRef.child("Players").child(playerName).child("Hand").setValue(playerHand.toString());
+
+                final DatabaseReference matchesRef = database.getReference("Ongoing_Matches/" + match_id).child("Round");
+                matchesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        Long round = dataSnapshot.getValue(Long.class);
+                        Log.d("setround", round.toString());
+                        matchesRef.setValue(round+1);
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {

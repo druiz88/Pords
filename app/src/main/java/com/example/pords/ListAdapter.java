@@ -2,7 +2,6 @@ package com.example.pords;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Build;
@@ -141,6 +140,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long size = dataSnapshot.child("Size").getValue(Long.class);
                         deal(size,match_id);
+                        matchPlayersRef.child("Round").setValue(0);
                         DatabaseReference matchesRef = database.getReference("Matches_Data/" + match_id);
                         String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
                         matchesRef.child("Start").setValue(time);
