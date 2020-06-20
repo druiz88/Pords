@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Build;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -139,7 +140,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long size = dataSnapshot.child("Size").getValue(Long.class);
                         deal(size,match_id);
-                        matchPlayersRef.child("Round").setValue(1);
+                        matchPlayersRef.child("Round").setValue(0);
                         DatabaseReference matchesRef = database.getReference("Matches_Data/" + match_id);
                         String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
                         matchesRef.child("Start").setValue(time);
@@ -297,7 +298,7 @@ public class ListAdapter extends ArrayAdapter<String>{
 
         final ArrayList<String> Order = new ArrayList<>();
         for (int c = 0; c < match_size; c++) {
-            Order.add(String.valueOf(c + 1));
+            Order.add(String.valueOf(c));
         }
         Collections.shuffle(Order);
 
@@ -315,7 +316,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     if (!decker.equals("Deck") && !decker.equals("Discard Pile")) {
                         playersRef.child("Players").child(snapshot.getKey()).child("Order").setValue(Long.parseLong(Order.get(z)));
                         playersRef.child("Players").child(snapshot.getKey()).child("Cards").setValue(11);
-                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + Order.get(z)).toString());
+                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + (Long.parseLong(Order.get(z))+1)).toString());
                         z = z + 1;
                     } else if (decker.equals("Deck")) {
                         Long size = dataSnapshot.child("Size").getValue(Long.class);

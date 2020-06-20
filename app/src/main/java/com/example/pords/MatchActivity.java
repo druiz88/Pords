@@ -45,6 +45,7 @@ public class MatchActivity extends AppCompatActivity {
     private TextView mTextViewCountDown;
     CountDownTimer mCountDownTimer;
     private long mTimeLeftInMillis = START_TIME_IN_MILLIS;
+    ImageView discardPile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +60,7 @@ public class MatchActivity extends AppCompatActivity {
         linear = findViewById(R.id.linear);
         mTextViewCountDown = findViewById(R.id.text_view_countdown);
         mTextViewCountDown.setVisibility(View.GONE);
+        discardPile = findViewById(R.id.imageViewDiscard);
 
         //Get intents
         Intent intent = getIntent();
@@ -72,6 +74,8 @@ public class MatchActivity extends AppCompatActivity {
         String username = "User: " + playerName;
         textView.setText(username);
 
+        discardPile(match_id);
+
         //Get cards values
         //Listen values on Round change
         DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id).child("Round");
@@ -82,7 +86,6 @@ public class MatchActivity extends AppCompatActivity {
                 roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                         Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
                         Long round = dataSnapshot.child("Round").getValue(Long.class);
                         Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
@@ -122,6 +125,51 @@ public class MatchActivity extends AppCompatActivity {
 
     }
 
+    public void discardPile(String matchid){
+        //Get Discard Pile
+        final DatabaseReference deckRef = database.getReference("Ongoing_Matches/" + matchid).child("Players");
+        deckRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                final Long deckCards = dataSnapshot.child("Deck").child("Cards").getValue(Long.class);
+                final String deckHand = dataSnapshot.child("Deck").child("Hand").getValue(String.class);
+
+                Log.d("deckHand", deckHand);
+
+                String num = deckHand.substring(1, deckHand.length() - 1);
+                String[] str = num.split(", ");
+                ArrayList<String> decklist = new ArrayList<>(Arrays.asList(str).subList(0, deckCards.intValue()));
+                final String lcard = decklist.get(deckCards.intValue()-1);
+                decklist.remove(deckCards.intValue()-1);
+                deckRef.child("Deck").child("Hand").setValue(decklist.toString());
+                deckRef.child("Deck").child("Cards").setValue(decklist.size());
+                Log.d("deckHand2", decklist.toString());
+
+                deckRef.child("Discard Pile").child("Hand").setValue("[" + lcard + "]");
+                deckRef.child("Discard Pile").child("Cards").setValue(1);
+
+                deckRef.child("Discard Pile").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String totalDisc = dataSnapshot.child("Hand").getValue(String.class);
+                        Log.d("totalDisc", totalDisc);
+                        String realLast = totalDisc.substring(totalDisc.length() - 5, totalDisc.length() - 1);
+                        Log.d("realLast", realLast);
+                        String PACKAGE_NAME = getApplicationContext().getPackageName();
+                        int imgId = getResources().getIdentifier(PACKAGE_NAME+":drawable/"+realLast , null, null);
+                        discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+    }
+
 
     public void drawCards(ArrayList<String> playaHand, Long ncards){
         //Draw cards
@@ -137,11 +185,11 @@ public class MatchActivity extends AppCompatActivity {
             handsMap.put("img" + (n+1), iv);
 
             //Imageview attributes
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 200);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 230);
             if(n==0) {
                 layoutParams.setMarginStart(60);
             } else {
-                layoutParams.setMarginStart(-60);
+                layoutParams.setMarginStart(-90);
             }
             layoutParams.gravity = Gravity.BOTTOM;
             Objects.requireNonNull(handsMap.get("img" + (n + 1))).setLayoutParams(layoutParams);
@@ -278,7 +326,7 @@ public class MatchActivity extends AppCompatActivity {
     }
 
 
-    public void Abandon2(View view){
+    public void discard(View view){
 
     }
 
