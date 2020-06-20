@@ -12,7 +12,6 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -70,13 +69,14 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         for(DataSnapshot snaps: dataSnapshot.child("Players").getChildren()){
-                            if(snaps.getKey().equals("Deck") || snaps.getKey().equals("Discard Pile")){
+                            if(Objects.equals(snaps.getKey(), "Deck") || Objects.equals(snaps.getKey(), "Discard Pile")){
                                 purgeRef.child("Players").child(snaps.getKey()).removeValue();
                             } else {
                                 purgeRef.child("Players").child(snaps.getKey()).child("Cards").removeValue();
                                 purgeRef.child("Players").child(snaps.getKey()).child("Hand").setValue("-");
                                 purgeRef.child("Players").child(snaps.getKey()).child("Order").removeValue();
                                 purgeRef.child("Round").removeValue();
+                                purgeRef.child("Timer").removeValue();
                             }
                         }
                     }

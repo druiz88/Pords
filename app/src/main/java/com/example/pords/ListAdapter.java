@@ -98,7 +98,6 @@ public class ListAdapter extends ArrayAdapter<String>{
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Long count = dataSnapshot.child("Count").getValue(Long.class);
                 Long size = dataSnapshot.child("Size").getValue(Long.class);
-                assert count != null;
                 if(count.equals(size)){
                     //Check if user is in match
                     database.getReference("Users/" + playerID).child("In_Match").addListenerForSingleValueEvent(new ValueEventListener() {

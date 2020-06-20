@@ -2,12 +2,10 @@ package com.example.pords;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.renderscript.Sampler;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -15,21 +13,18 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -46,7 +41,10 @@ public class MatchActivity extends AppCompatActivity {
     Button btn_start;
     LinearLayout linear;
     Map<String, ImageView> handsMap;
-
+    private static final long START_TIME_IN_MILLIS = 15000;
+    private TextView mTextViewCountDown;
+    CountDownTimer mCountDownTimer;
+    private long mTimeLeftInMillis = START_TIME_IN_MILLIS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +57,8 @@ public class MatchActivity extends AppCompatActivity {
         playerList = new ArrayList<>();
         btn_start = findViewById(R.id.btn_start);
         linear = findViewById(R.id.linear);
+        mTextViewCountDown = findViewById(R.id.text_view_countdown);
+        mTextViewCountDown.setVisibility(View.GONE);
 
         //Get intents
         Intent intent = getIntent();
@@ -72,34 +72,40 @@ public class MatchActivity extends AppCompatActivity {
         String username = "User: " + playerName;
         textView.setText(username);
 
-
         //Get cards values
+        //Listen values on Round change
         DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id).child("Round");
         roundRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id);
+                final DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id);
                 roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
+
                         Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
                         Long round = dataSnapshot.child("Round").getValue(Long.class);
                         Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
                         Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
+                        assert order != null;
 
-                        if(order.equals(round%nplayers)){
+                        //Enable DRAW button only on player's turn
+                        if(round!=null && nplayers!=null && order.equals(round%nplayers)){
                             btn_start.setEnabled(true);
                         } else {
                             btn_start.setEnabled(false);
                         }
 
+                        String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
+
+                        //Generate hand only on this conditions
                         if(hand!=null && !hand.equals("-")) {
                             Log.d("round", String.valueOf(round));
                             Log.d("hand", hand);
                             Log.d("cards", String.valueOf(cards));
                             String num = hand.substring(1, hand.length() - 1);
                             String[] str = num.split(", ");
+                            assert cards != null;
                             playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
                             drawCards(playerHand, cards);
                         }
@@ -116,17 +122,21 @@ public class MatchActivity extends AppCompatActivity {
 
     }
 
+
     public void drawCards(ArrayList<String> playaHand, Long ncards){
         //Draw cards
-        ViewGroup view = (ViewGroup)findViewById(R.id.linear);
+        ViewGroup view = findViewById(R.id.linear);
 
         view.removeAllViews();
 
         handsMap = new HashMap<>();
 
         for(int n=0; n<ncards.intValue(); n++){
+
             ImageView iv = new ImageView(this);
             handsMap.put("img" + (n+1), iv);
+
+            //Imageview attributes
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 200);
             if(n==0) {
                 layoutParams.setMarginStart(60);
@@ -134,33 +144,38 @@ public class MatchActivity extends AppCompatActivity {
                 layoutParams.setMarginStart(-60);
             }
             layoutParams.gravity = Gravity.BOTTOM;
-            handsMap.get("img" + (n+1)).setLayoutParams(layoutParams);
-            handsMap.get("img" + (n+1)).setImageResource(R.drawable.gray_back);
-            handsMap.get("img" + (n+1)).setAdjustViewBounds(true);
+            Objects.requireNonNull(handsMap.get("img" + (n + 1))).setLayoutParams(layoutParams);
+            Objects.requireNonNull(handsMap.get("img" + (n + 1))).setImageResource(R.drawable.gray_back);
+            Objects.requireNonNull(handsMap.get("img" + (n + 1))).setAdjustViewBounds(true);
+            //End Image attributes
 
+            //Get image resource ID dynamically
             String PACKAGE_NAME = getApplicationContext().getPackageName();
             int imgId = getResources().getIdentifier(PACKAGE_NAME+":drawable/"+playaHand.get(n) , null, null);
-            handsMap.get("img" + (n+1)).setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
+            Objects.requireNonNull(handsMap.get("img" + (n + 1))).setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
 
+            //Raise card on click
             final int finalN = n;
-            handsMap.get("img" + (n+1)).setOnClickListener(new View.OnClickListener() {
+            Objects.requireNonNull(handsMap.get("img" + (n + 1))).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) handsMap.get("img" + (finalN +1)).getLayoutParams();
+                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) Objects.requireNonNull(handsMap.get("img" + (finalN + 1))).getLayoutParams();
                     if(params.gravity== Gravity.TOP){
                         params.gravity = Gravity.BOTTOM;
                     } else {
                         params.gravity = Gravity.TOP;
                     }
-                    handsMap.get("img" + (finalN +1)).setLayoutParams(params);
+                    Objects.requireNonNull(handsMap.get("img" + (finalN + 1))).setLayoutParams(params);
                 }
             });
 
+            //Add card attributes
             view.addView(handsMap.get("img" + (n+1)));
         }
     }
 
     public void Sort(View views){
+
         Collections.sort(playerHand);
         updateHand(playerHand.toString());
 
@@ -174,7 +189,8 @@ public class MatchActivity extends AppCompatActivity {
                 Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
                 Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
 
-                if(order.equals(round%nplayers)){
+                assert order != null;
+                if(round!=null && nplayers!=null && order.equals(round%nplayers)){
                     btn_start.setEnabled(true);
                 } else {
                     btn_start.setEnabled(false);
@@ -186,6 +202,7 @@ public class MatchActivity extends AppCompatActivity {
                     Log.d("cards", String.valueOf(cards));
                     String num = hand.substring(1, hand.length() - 1);
                     String[] str = num.split(", ");
+                    assert cards != null;
                     playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
                     drawCards(playerHand, cards);
                 }
@@ -237,13 +254,12 @@ public class MatchActivity extends AppCompatActivity {
                 handRef.child("Players").child(playerName).child("Cards").setValue(playerHand.size());
                 handRef.child("Players").child(playerName).child("Hand").setValue(playerHand.toString());
 
-                final DatabaseReference matchesRef = database.getReference("Ongoing_Matches/" + match_id).child("Round");
-                matchesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                handRef.child("Round").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long round = dataSnapshot.getValue(Long.class);
                         Log.d("setround", round.toString());
-                        matchesRef.setValue(round+1);
+                        handRef.child("Round").setValue(round+1);
                     }
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
