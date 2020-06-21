@@ -34,13 +34,13 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/button5"
+        android:id="@+id/btn_disc"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
+        android:layout_marginStart="16dp"
         android:layout_marginBottom="8dp"
-        android:text="DISCARD"
         android:onClick="discard"
+        android:text="DISCARD"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/button2"
         tools:ignore="OnClick" />
@@ -63,7 +63,7 @@
         android:layout_height="100dp"
         android:layout_marginBottom="8dp"
         android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@+id/button5"
+        app:layout_constraintBottom_toTopOf="@+id/btn_disc"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/linear">
 
@@ -92,11 +92,22 @@
         android:id="@+id/btn_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="32dp"
-        android:text="DRAW"
+        android:layout_marginStart="16dp"
         android:onClick="Start"
+        android:text="DRAW"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button5"
+        app:layout_constraintStart_toEndOf="@+id/btn_disc"
+        app:layout_constraintTop_toBottomOf="@+id/linear" />
+
+    <Button
+        android:id="@+id/btn_buy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:onClick="Buy"
+        android:text="BUY"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/btn_start"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
 
     <TextView

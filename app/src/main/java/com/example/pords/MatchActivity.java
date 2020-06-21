@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -38,7 +40,7 @@ public class MatchActivity extends AppCompatActivity {
     List<String> playerList;
     TextView textView;
     ArrayList<String> playerHand;
-    Button btn_start;
+    Button btn_start, btn_disc, btn_buy;
     LinearLayout linear;
     Map<String, ImageView> handsMap;
     private static final long START_TIME_IN_MILLIS = 15000;
@@ -46,6 +48,7 @@ public class MatchActivity extends AppCompatActivity {
     CountDownTimer mCountDownTimer;
     private long mTimeLeftInMillis = START_TIME_IN_MILLIS;
     ImageView discardPile;
+    boolean[] array;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +60,8 @@ public class MatchActivity extends AppCompatActivity {
         database = FirebaseDatabase.getInstance();
         playerList = new ArrayList<>();
         btn_start = findViewById(R.id.btn_start);
+        btn_disc = findViewById(R.id.btn_disc);
+        btn_buy = findViewById(R.id.btn_buy);
         linear = findViewById(R.id.linear);
         mTextViewCountDown = findViewById(R.id.text_view_countdown);
         mTextViewCountDown.setVisibility(View.GONE);
@@ -92,11 +97,13 @@ public class MatchActivity extends AppCompatActivity {
                         Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
                         assert order != null;
 
-                        //Enable DRAW button only on player's turn
+                        //Enable DRAW/DISCARD buttons only on player's turn
                         if(round!=null && nplayers!=null && order.equals(round%nplayers)){
                             btn_start.setEnabled(true);
+                            btn_disc.setEnabled(true);
                         } else {
                             btn_start.setEnabled(false);
+                            btn_disc.setEnabled(false);
                         }
 
                         String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
@@ -111,6 +118,13 @@ public class MatchActivity extends AppCompatActivity {
                             assert cards != null;
                             playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
                             drawCards(playerHand, cards);
+
+                            String disHand = dataSnapshot.child("Players").child("Discard Pile").child("Hand").getValue(String.class);
+                            String realLast = disHand.substring(disHand.length() - 5, disHand.length() - 1);
+                            Log.d("realLast", realLast);
+                            String PACKAGE_NAME = getApplicationContext().getPackageName();
+                            int imgId = getResources().getIdentifier(PACKAGE_NAME+":drawable/"+realLast , null, null);
+                            discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
                         }
                     }
                     @Override
@@ -178,11 +192,13 @@ public class MatchActivity extends AppCompatActivity {
         view.removeAllViews();
 
         handsMap = new HashMap<>();
+        array = new boolean[ncards.intValue()];
 
         for(int n=0; n<ncards.intValue(); n++){
 
             ImageView iv = new ImageView(this);
             handsMap.put("img" + (n+1), iv);
+            array[n] = false;
 
             //Imageview attributes
             LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 230);
@@ -210,8 +226,10 @@ public class MatchActivity extends AppCompatActivity {
                     LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) Objects.requireNonNull(handsMap.get("img" + (finalN + 1))).getLayoutParams();
                     if(params.gravity== Gravity.TOP){
                         params.gravity = Gravity.BOTTOM;
+                        array[finalN] = false;
                     } else {
                         params.gravity = Gravity.TOP;
+                        array[finalN] = true;
                     }
                     Objects.requireNonNull(handsMap.get("img" + (finalN + 1))).setLayoutParams(params);
                 }
@@ -302,17 +320,6 @@ public class MatchActivity extends AppCompatActivity {
                 handRef.child("Players").child(playerName).child("Cards").setValue(playerHand.size());
                 handRef.child("Players").child(playerName).child("Hand").setValue(playerHand.toString());
 
-                handRef.child("Round").addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        Long round = dataSnapshot.getValue(Long.class);
-                        Log.d("setround", round.toString());
-                        handRef.child("Round").setValue(round+1);
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                    }
-                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -327,6 +334,82 @@ public class MatchActivity extends AppCompatActivity {
 
 
     public void discard(View view){
+
+        int pickCount = 0;
+        int picked = 0;
+        int count = 0;
+
+        for(boolean b : array) {
+            if(b) {
+                picked = count;
+                pickCount = pickCount + 1;
+            }
+            count = count +1;
+        }
+
+        switch (pickCount){
+            case 0:
+                Toast.makeText(this, "No cards picked", Toast.LENGTH_SHORT).show();
+                break;
+            case 1:
+                Log.d("picked", String.valueOf(picked));
+
+                final int pick2 = picked;
+                final DatabaseReference discRef = database.getReference("Ongoing_Matches/" + match_id).child("Players");
+
+                discRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String pHand = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
+                        String num = pHand.substring(1, pHand.length() - 1);
+                        String[] str = num.split(", ");
+                        playerHand = new ArrayList<>(Arrays.asList(str));
+                        Log.d("playerHand", playerHand.toString());
+                        String dCard = playerHand.get(pick2);
+                        playerHand.remove(pick2);
+                        Log.d("playerHand", playerHand.toString());
+
+                        String dHand = dataSnapshot.child("Discard Pile").child("Hand").getValue(String.class);
+                        String dnum = dHand.substring(1, dHand.length() - 1);
+                        String[] dstr = dnum.split(", ");
+                        ArrayList<String> discHand = new ArrayList<>(Arrays.asList(dstr));
+                        Log.d("discHand", discHand.toString());
+                        discHand.add(dCard);
+                        Log.d("discHand", discHand.toString());
+
+                        discRef.child("Discard Pile").child("Hand").setValue(discHand.toString());
+                        discRef.child("Discard Pile").child("Cards").setValue(discHand.size());
+                        discRef.child(playerName).child("Hand").setValue(playerHand.toString());
+                        discRef.child(playerName).child("Cards").setValue(playerHand.size());
+
+                        drawCards(playerHand, Long.valueOf(str.length - 1));
+
+                        final DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id).child("Round");
+                        roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                Long round = dataSnapshot.getValue(Long.class);
+                                roundRef.setValue(round+1);
+                            }
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+                            }
+                        });
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
+
+                break;
+            default:
+                Toast.makeText(this, "Can't discard more than one card", Toast.LENGTH_SHORT).show();
+                break;
+        }
+
+    }
+
+    public void Buy(View view){
 
     }
 
