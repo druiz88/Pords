@@ -49,6 +49,7 @@ public class MatchActivity extends AppCompatActivity {
     private long mTimeLeftInMillis = START_TIME_IN_MILLIS;
     ImageView discardPile;
     boolean[] array;
+    int packed = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -227,9 +228,11 @@ public class MatchActivity extends AppCompatActivity {
                     if(params.gravity== Gravity.TOP){
                         params.gravity = Gravity.BOTTOM;
                         array[finalN] = false;
+                        packed = packed - 1;
                     } else {
                         params.gravity = Gravity.TOP;
                         array[finalN] = true;
+                        packed = packed + 1;
                     }
                     Objects.requireNonNull(handsMap.get("img" + (finalN + 1))).setLayoutParams(params);
                 }
@@ -242,15 +245,19 @@ public class MatchActivity extends AppCompatActivity {
 
     public void Sort(View views){
 
-        Collections.sort(playerHand);
-        updateHand(playerHand.toString());
-
         DatabaseReference roundRef = database.getReference("Ongoing_Matches/" + match_id);
         roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
                 Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
+
+                String num = hand.substring(1, hand.length() - 1);
+                String[] str = num.split(", ");
+                playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
+                Collections.sort(playerHand);
+                updateHand(playerHand.toString());
+
                 Long round = dataSnapshot.child("Round").getValue(Long.class);
                 Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
                 Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
@@ -266,10 +273,6 @@ public class MatchActivity extends AppCompatActivity {
                     Log.d("round", String.valueOf(round));
                     Log.d("hand", hand);
                     Log.d("cards", String.valueOf(cards));
-                    String num = hand.substring(1, hand.length() - 1);
-                    String[] str = num.split(", ");
-                    assert cards != null;
-                    playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
                     drawCards(playerHand, cards);
                 }
             }
@@ -412,5 +415,150 @@ public class MatchActivity extends AppCompatActivity {
     public void Buy(View view){
 
     }
+
+    public void Meld(View view){
+
+        Log.d("packed", String.valueOf(packed));
+
+        int pickCount = 0;
+        final int[] picked = new int[packed];
+        int count = 0;
+
+        for(boolean b : array) {
+            if(b) {
+                picked[pickCount] = count;
+                pickCount = pickCount + 1;
+            }
+            count = count +1;
+        }
+
+        switch (packed){
+            case 0:
+                Toast.makeText(this, "No cards picked", Toast.LENGTH_SHORT).show();
+                break;
+            case 1:
+            case 2:
+                Toast.makeText(this, "Too few cards picked", Toast.LENGTH_SHORT).show();
+                break;
+            case 3:
+                final DatabaseReference discRef = database.getReference("Ongoing_Matches/" + match_id).child("Players");
+                discRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String pHand = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
+                        String num = pHand.substring(1, pHand.length() - 1);
+                        String[] str = num.split(", ");
+                        Log.d("str size", String.valueOf(str.length));
+                        String[] trio = new String[3];
+                        trio[0] = str[picked[0]];
+                        trio[1] = str[picked[1]];
+                        trio[2] = str[picked[2]];
+                        Log.d("Picked", Arrays.toString(picked));
+                        Log.d("Trio", Arrays.toString(trio));
+                        int cReal = 0;
+                        int cWcard = 0;
+                        int[] cRank = new int[3];
+
+                        for(String x : trio){
+                            if (x.substring(2).equals("02") || x.substring(0, 2).equals("jk")) {
+                                cWcard = cWcard + 1;
+                            } else {
+                                cRank[cReal] = Integer.parseInt(x.substring(2));
+                            }
+                            cReal = cReal + 1;
+                        }
+
+                        Log.d("Array", Arrays.toString(cRank));
+
+                        int mFq = mostFrequent(cRank, 3).get("res");
+                        int fq = mostFrequent(cRank, 3).get("max count");
+                        Log.d("Most", String.valueOf(mFq));
+                        Log.d("FQ", String.valueOf(fq));
+
+                        if(fq>1 && mFq!=0){
+                            ArrayList<String> handlist = new ArrayList<>(Arrays.asList(str));
+                            Log.d("handlist", handlist.toString());
+                            handlist.remove(picked[0]);
+                            handlist.remove(picked[1]-1);
+                            handlist.remove(picked[2]-2);
+                            Log.d("handlist2", handlist.toString());
+                            discRef.child(playerName).child("Hand").setValue(handlist.toString());
+                            discRef.child(playerName).child("Cards").setValue(str.length-3);
+                            drawCards(handlist, Long.valueOf(str.length-3));
+
+                            String pHand2 = dataSnapshot.child("Discard Pile").child("Hand").getValue(String.class);
+                            String num2 = pHand2.substring(1, pHand2.length() - 1);
+                            String[] str2 = num2.split(", ");
+                            ArrayList<String> disclist = new ArrayList<>(Arrays.asList(str2));
+                            disclist.add(trio[0]);
+                            disclist.add(trio[1]);
+                            disclist.add(trio[2]);
+                            discRef.child("Discard Pile").child("Hand").setValue(disclist.toString());
+                            discRef.child("Discard Pile").child("Cards").setValue(str2.length+3);
+
+                            packed = 0;
+
+                        } else {
+                            if(cWcard>1) {
+                                Toast.makeText(MatchActivity.this, "Can't pick more wildcards", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(MatchActivity.this, "Three of a kind not accepted", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
+                break;
+            default:
+                Toast.makeText(this, "Number of cards exceeded", Toast.LENGTH_SHORT).show();
+                break;
+        }
+
+    }
+
+    public Map<String, Integer> mostFrequent(int[] arr, int n) {
+
+        // Sort the array
+        Arrays.sort(arr);
+
+        Map<String, Integer> map = new HashMap<>();
+
+        // find the max frequency using linear
+        // traversal
+        int max_count = 1;
+        int res = arr[0];
+        int curr_count = 1;
+
+        for (int i = 1; i < n; i++)
+        {
+            if (arr[i] == arr[i - 1])
+                curr_count++;
+            else
+            {
+                if (curr_count > max_count)
+                {
+                    max_count = curr_count;
+                    res = arr[i - 1];
+                }
+                curr_count = 1;
+            }
+        }
+
+        // If last element is most frequent
+        if (curr_count > max_count)
+        {
+            max_count = curr_count;
+            res = arr[n - 1];
+        }
+
+        map.put("res", res);
+        map.put("max count", max_count);
+
+        return map;
+    }
+
 
 }
