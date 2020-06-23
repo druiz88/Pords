@@ -8,11 +8,13 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,7 +42,7 @@ public class MatchActivity extends AppCompatActivity {
     List<String> playerList;
     TextView textView;
     ArrayList<String> playerHand;
-    Button btn_start, btn_disc, btn_buy;
+    Button btn_start, btn_disc, btn_buy, btn_meld;
     LinearLayout linear;
     Map<String, ImageView> handsMap;
     private static final long START_TIME_IN_MILLIS = 15000;
@@ -50,6 +52,8 @@ public class MatchActivity extends AppCompatActivity {
     ImageView discardPile;
     boolean[] array;
     int packed = 0;
+    int _xDelta, _yDelta;
+    ViewGroup rootLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +67,7 @@ public class MatchActivity extends AppCompatActivity {
         btn_start = findViewById(R.id.btn_start);
         btn_disc = findViewById(R.id.btn_disc);
         btn_buy = findViewById(R.id.btn_buy);
+        btn_meld = findViewById(R.id.btn_meld);
         linear = findViewById(R.id.linear);
         mTextViewCountDown = findViewById(R.id.text_view_countdown);
         mTextViewCountDown.setVisibility(View.GONE);
@@ -98,13 +103,14 @@ public class MatchActivity extends AppCompatActivity {
                         Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
                         assert order != null;
 
+                        btn_meld.setEnabled(false);
+                        btn_disc.setEnabled(false);
+
                         //Enable DRAW/DISCARD buttons only on player's turn
                         if(round!=null && nplayers!=null && order.equals(round%nplayers)){
                             btn_start.setEnabled(true);
-                            btn_disc.setEnabled(true);
                         } else {
                             btn_start.setEnabled(false);
-                            btn_disc.setEnabled(false);
                         }
 
                         String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
@@ -323,6 +329,7 @@ public class MatchActivity extends AppCompatActivity {
                 handRef.child("Players").child(playerName).child("Cards").setValue(playerHand.size());
                 handRef.child("Players").child(playerName).child("Hand").setValue(playerHand.toString());
 
+                drawCards(playerHand, Long.valueOf(playerHand.size()));
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -333,6 +340,9 @@ public class MatchActivity extends AppCompatActivity {
 
     public void Start(View view){
         drawCard();
+        btn_start.setEnabled(false);
+        btn_disc.setEnabled(true);
+        btn_meld.setEnabled(true);
     }
 
 
@@ -398,6 +408,8 @@ public class MatchActivity extends AppCompatActivity {
                             public void onCancelled(@NonNull DatabaseError databaseError) {
                             }
                         });
+
+                        packed = 0;
                     }
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -559,6 +571,5 @@ public class MatchActivity extends AppCompatActivity {
 
         return map;
     }
-
 
 }
