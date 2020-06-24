@@ -2,11 +2,15 @@ package com.example.pords;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.annotation.SuppressLint;
+import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,6 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,18 +47,14 @@ public class MatchActivity extends AppCompatActivity {
     List<String> playerList;
     TextView textView;
     ArrayList<String> playerHand;
-    Button btn_start, btn_disc, btn_buy, btn_meld;
-    LinearLayout linear;
-    Map<String, ImageView> handsMap;
-    private static final long START_TIME_IN_MILLIS = 15000;
-    private TextView mTextViewCountDown;
-    CountDownTimer mCountDownTimer;
-    private long mTimeLeftInMillis = START_TIME_IN_MILLIS;
+    Button btn_start, btn_disc, btn_buy, btn_meld, btn_set;
+    LinearLayout linear, Hand1, Hand2, Hand3, Hand4, Hand5, Hand6, Hand7, Hand8, Hand9, Hand10, Hand11, Hand12;
+    Map<String, Integer> layMap;
+    Map<String, ImageView> handsMap, pileMap;
     ImageView discardPile;
     boolean[] array;
     int packed = 0;
-    int _xDelta, _yDelta;
-    ViewGroup rootLayout;
+    int meldCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,9 +70,36 @@ public class MatchActivity extends AppCompatActivity {
         btn_buy = findViewById(R.id.btn_buy);
         btn_meld = findViewById(R.id.btn_meld);
         linear = findViewById(R.id.linear);
-        mTextViewCountDown = findViewById(R.id.text_view_countdown);
-        mTextViewCountDown.setVisibility(View.GONE);
+        btn_set = findViewById(R.id.btn_set);
         discardPile = findViewById(R.id.imageViewDiscard);
+        Hand1 = findViewById(R.id.Hand1);
+        Hand2 = findViewById(R.id.Hand2);
+        Hand3 = findViewById(R.id.Hand3);
+        Hand4 = findViewById(R.id.Hand4);
+        Hand5 = findViewById(R.id.Hand5);
+        Hand6 = findViewById(R.id.Hand6);
+        Hand7 = findViewById(R.id.Hand7);
+        Hand8 = findViewById(R.id.Hand8);
+        Hand9 = findViewById(R.id.Hand9);
+        Hand10 = findViewById(R.id.Hand10);
+        Hand11 = findViewById(R.id.Hand11);
+        Hand12 = findViewById(R.id.Hand12);
+
+        layMap = new HashMap<>();
+        layMap.put("Hand1", R.id.Hand1);
+        layMap.put("Hand2", R.id.Hand2);
+        layMap.put("Hand3", R.id.Hand3);
+        layMap.put("Hand4", R.id.Hand4);
+        layMap.put("Hand5", R.id.Hand5);
+        layMap.put("Hand6", R.id.Hand6);
+        layMap.put("Hand7", R.id.Hand7);
+        layMap.put("Hand8", R.id.Hand8);
+        layMap.put("Hand9", R.id.Hand9);
+        layMap.put("Hand10", R.id.Hand10);
+        layMap.put("Hand11", R.id.Hand11);
+        layMap.put("Hand12", R.id.Hand12);
+
+
 
         //Get intents
         Intent intent = getIntent();
@@ -103,12 +131,17 @@ public class MatchActivity extends AppCompatActivity {
                         Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
                         assert order != null;
 
+                        btn_set.setEnabled(false);
                         btn_meld.setEnabled(false);
                         btn_disc.setEnabled(false);
 
                         //Enable DRAW/DISCARD buttons only on player's turn
                         if(round!=null && nplayers!=null && order.equals(round%nplayers)){
+                            packed = 0;
                             btn_start.setEnabled(true);
+                            if(meldCount>1) {
+                                btn_set.setEnabled(true);
+                            }
                         } else {
                             btn_start.setEnabled(false);
                         }
@@ -138,6 +171,35 @@ public class MatchActivity extends AppCompatActivity {
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                     }
                 });
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
+        final DatabaseReference pileRef = database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Piles");
+        pileRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()) {
+                    for (DataSnapshot ds : dataSnapshot.getChildren()) {
+                        String layHand = ds.getKey();
+                        Log.d("LayHand", ds.getKey());
+                        assert layHand != null;
+                        String discHand = ds.getValue(String.class);
+                        Log.d("Hand", discHand);
+                        assert discHand != null;
+                        String num = discHand.substring(1, discHand.length() - 1);
+                        String[] str = num.split(", ");
+                        ArrayList disclist = new ArrayList(Arrays.asList(str));
+
+                        Log.d("discList", disclist.toString());
+                        Log.d("size", String.valueOf(disclist.size()));
+                        Log.d("layHand", layHand);
+
+                        drawPile(disclist, Long.valueOf(disclist.size()), layHand);
+                    }
+                }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -248,6 +310,41 @@ public class MatchActivity extends AppCompatActivity {
             view.addView(handsMap.get("img" + (n+1)));
         }
     }
+
+    public void drawPile(final ArrayList<String> pHand, final Long ncards, final String layName) {
+
+        ViewGroup view = findViewById(layMap.get(layName));
+        view.removeAllViews();
+
+        pileMap = new HashMap<>();
+
+        for(int n=0; n<ncards.intValue(); n++) {
+
+            ImageView iv = new ImageView(this);
+            pileMap.put(layName + (n + 1), iv);
+
+            //Imageview attributes
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 200);
+            if (n == 0) {
+                layoutParams.setMarginStart(20);
+            } else {
+                layoutParams.setMarginStart(-90);
+            }
+            layoutParams.gravity = Gravity.BOTTOM;
+            Objects.requireNonNull(pileMap.get(layName + (n + 1))).setLayoutParams(layoutParams);
+            Objects.requireNonNull(pileMap.get(layName + (n + 1))).setImageResource(R.drawable.gray_back);
+            Objects.requireNonNull(pileMap.get(layName + (n + 1))).setAdjustViewBounds(true);
+            //End Image attributes
+
+            //Get image resource ID dynamically
+            String PACKAGE_NAME = getApplicationContext().getPackageName();
+            int imgId = getResources().getIdentifier(PACKAGE_NAME + ":drawable/" + pHand.get(n), null, null);
+            Objects.requireNonNull(pileMap.get(layName + (n + 1))).setImageBitmap(BitmapFactory.decodeResource(getResources(), imgId));
+
+            view.addView(pileMap.get(layName + (n+1)));
+        }
+    }
+
 
     public void Sort(View views){
 
@@ -457,10 +554,10 @@ public class MatchActivity extends AppCompatActivity {
                 discRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
                         String pHand = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
                         String num = pHand.substring(1, pHand.length() - 1);
                         String[] str = num.split(", ");
-                        Log.d("str size", String.valueOf(str.length));
                         String[] trio = new String[3];
                         trio[0] = str[picked[0]];
                         trio[1] = str[picked[1]];
@@ -471,7 +568,7 @@ public class MatchActivity extends AppCompatActivity {
                         int cWcard = 0;
                         int[] cRank = new int[3];
 
-                        for(String x : trio){
+                        for (String x : trio) {
                             if (x.substring(2).equals("02") || x.substring(0, 2).equals("jk")) {
                                 cWcard = cWcard + 1;
                             } else {
@@ -487,31 +584,41 @@ public class MatchActivity extends AppCompatActivity {
                         Log.d("Most", String.valueOf(mFq));
                         Log.d("FQ", String.valueOf(fq));
 
-                        if(fq>1 && mFq!=0){
+                        if (fq > 1 && mFq != 0) {
                             ArrayList<String> handlist = new ArrayList<>(Arrays.asList(str));
                             Log.d("handlist", handlist.toString());
                             handlist.remove(picked[0]);
-                            handlist.remove(picked[1]-1);
-                            handlist.remove(picked[2]-2);
+                            handlist.remove(picked[1] - 1);
+                            handlist.remove(picked[2] - 2);
                             Log.d("handlist2", handlist.toString());
                             discRef.child(playerName).child("Hand").setValue(handlist.toString());
-                            discRef.child(playerName).child("Cards").setValue(str.length-3);
-                            drawCards(handlist, Long.valueOf(str.length-3));
+                            discRef.child(playerName).child("Cards").setValue(str.length - 3);
+                            drawCards(handlist, Long.valueOf(str.length - 3));
 
-                            String pHand2 = dataSnapshot.child("Discard Pile").child("Hand").getValue(String.class);
-                            String num2 = pHand2.substring(1, pHand2.length() - 1);
-                            String[] str2 = num2.split(", ");
-                            ArrayList<String> disclist = new ArrayList<>(Arrays.asList(str2));
+                            ArrayList<String> disclist = new ArrayList<>();
                             disclist.add(trio[0]);
                             disclist.add(trio[1]);
                             disclist.add(trio[2]);
-                            discRef.child("Discard Pile").child("Hand").setValue(disclist.toString());
-                            discRef.child("Discard Pile").child("Cards").setValue(str2.length+3);
+
+                            String layHand;
+
+                            if(!dataSnapshot.child("Piles").exists()){
+                                layHand = "Hand1";
+                            } else {
+                                int pileCount = 0;
+                                for(DataSnapshot ds : dataSnapshot.child("Piles").getChildren()){
+                                    pileCount = pileCount + 1;
+                                }
+                                layHand = "Hand" + (pileCount+1);
+                            }
+
+                            discRef.child("Piles").child(layHand).setValue(disclist.toString());
 
                             packed = 0;
+                            meldCount = meldCount + 1;
 
                         } else {
-                            if(cWcard>1) {
+                            if (cWcard > 1) {
                                 Toast.makeText(MatchActivity.this, "Can't pick more wildcards", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(MatchActivity.this, "Three of a kind not accepted", Toast.LENGTH_SHORT).show();

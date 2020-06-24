@@ -49,10 +49,10 @@
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="8dp"
+        android:text="TextView"
         android:textColor="#000"
         android:textStyle="bold"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
@@ -103,7 +103,6 @@
         android:id="@+id/btn_buy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:onClick="Buy"
         android:text="BUY"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -114,25 +113,148 @@
         android:id="@+id/btn_meld"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:onClick="Meld"
         android:text="MELD"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button2"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
 
-    <TextView
-        android:id="@+id/text_view_countdown"
+    <Button
+        android:id="@+id/btn_set"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_marginStart="32dp"
-        android:text="00:00"
-        android:textColor="@android:color/black"
-        android:textSize="30sp"
+        android:layout_marginEnd="8dp"
+        android:onClick="Meld"
+        android:text="SET"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/textView"
+        app:layout_constraintEnd_toStartOf="@+id/btn_meld"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
+
+    <LinearLayout
+        android:id="@+id/Hand1"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:background="@drawable/back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/Hand2"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:background="@drawable/back"
+        app:layout_constraintStart_toEndOf="@+id/Hand1"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/Hand3"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:background="@drawable/back"
+        app:layout_constraintStart_toEndOf="@+id/Hand2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/Hand4"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:background="@drawable/back"
+        app:layout_constraintStart_toEndOf="@+id/Hand3"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/Hand5"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:background="@drawable/back"
+        app:layout_constraintStart_toEndOf="@+id/Hand4"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/Hand6"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        android:background="@drawable/back"
+        app:layout_constraintStart_toEndOf="@+id/Hand5"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/Hand7"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/Hand1"/>
+
+    <LinearLayout
+        android:id="@+id/Hand8"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@+id/Hand7"
+        app:layout_constraintTop_toBottomOf="@+id/Hand2"/>
+
+    <LinearLayout
+        android:id="@+id/Hand9"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@+id/Hand8"
+        app:layout_constraintTop_toBottomOf="@+id/Hand3"/>
+
+    <LinearLayout
+        android:id="@+id/Hand10"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@+id/Hand9"
+        app:layout_constraintTop_toBottomOf="@+id/Hand4"/>
+
+    <LinearLayout
+        android:id="@+id/Hand11"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@+id/Hand10"
+        app:layout_constraintTop_toBottomOf="@+id/Hand5"/>
+
+    <LinearLayout
+        android:id="@+id/Hand12"
+        android:layout_width="110dp"
+        android:layout_height="80dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@+id/Hand11"
+        app:layout_constraintTop_toBottomOf="@+id/Hand6"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

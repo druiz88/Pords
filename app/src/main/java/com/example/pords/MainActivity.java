@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         for(DataSnapshot snaps: dataSnapshot.child("Players").getChildren()){
-                            if(Objects.equals(snaps.getKey(), "Deck") || Objects.equals(snaps.getKey(), "Discard Pile")){
+                            if(Objects.equals(snaps.getKey(),"Deck") || Objects.equals(snaps.getKey(),"Discard Pile") || Objects.equals(snaps.getKey(), "Piles")){
                                 purgeRef.child("Players").child(snaps.getKey()).removeValue();
                             } else {
                                 purgeRef.child("Players").child(snaps.getKey()).child("Cards").removeValue();
