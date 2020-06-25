@@ -48,7 +48,8 @@ public class MatchActivity extends AppCompatActivity {
     TextView textView;
     ArrayList<String> playerHand;
     Button btn_start, btn_disc, btn_buy, btn_meld, btn_set;
-    LinearLayout linear, Hand1, Hand2, Hand3, Hand4, Hand5, Hand6, Hand7, Hand8, Hand9, Hand10, Hand11, Hand12;
+    LinearLayout linear, Hand1, Hand2, Hand3, Hand4, Hand5, Hand6, Hand7, Hand8, Hand9;
+    LinearLayout Hand10, Hand11, Hand12, Hand13, Hand14, Hand15;
     Map<String, Integer> layMap;
     Map<String, ImageView> handsMap, pileMap;
     ImageView discardPile;
@@ -84,6 +85,9 @@ public class MatchActivity extends AppCompatActivity {
         Hand10 = findViewById(R.id.Hand10);
         Hand11 = findViewById(R.id.Hand11);
         Hand12 = findViewById(R.id.Hand12);
+        Hand13 = findViewById(R.id.Hand13);
+        Hand14 = findViewById(R.id.Hand14);
+        Hand15 = findViewById(R.id.Hand15);
 
         layMap = new HashMap<>();
         layMap.put("Hand1", R.id.Hand1);
@@ -98,8 +102,9 @@ public class MatchActivity extends AppCompatActivity {
         layMap.put("Hand10", R.id.Hand10);
         layMap.put("Hand11", R.id.Hand11);
         layMap.put("Hand12", R.id.Hand12);
-
-
+        layMap.put("Hand13", R.id.Hand13);
+        layMap.put("Hand14", R.id.Hand14);
+        layMap.put("Hand15", R.id.Hand15);
 
         //Get intents
         Intent intent = getIntent();
@@ -150,21 +155,11 @@ public class MatchActivity extends AppCompatActivity {
 
                         //Generate hand only on this conditions
                         if(hand!=null && !hand.equals("-")) {
-                            Log.d("round", String.valueOf(round));
-                            Log.d("hand", hand);
-                            Log.d("cards", String.valueOf(cards));
                             String num = hand.substring(1, hand.length() - 1);
                             String[] str = num.split(", ");
                             assert cards != null;
                             playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
                             drawCards(playerHand, cards);
-
-                            String disHand = dataSnapshot.child("Players").child("Discard Pile").child("Hand").getValue(String.class);
-                            String realLast = disHand.substring(disHand.length() - 5, disHand.length() - 1);
-                            Log.d("realLast", realLast);
-                            String PACKAGE_NAME = getApplicationContext().getPackageName();
-                            int imgId = getResources().getIdentifier(PACKAGE_NAME+":drawable/"+realLast , null, null);
-                            discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
                         }
                     }
                     @Override
@@ -184,18 +179,12 @@ public class MatchActivity extends AppCompatActivity {
                 if(dataSnapshot.exists()) {
                     for (DataSnapshot ds : dataSnapshot.getChildren()) {
                         String layHand = ds.getKey();
-                        Log.d("LayHand", ds.getKey());
                         assert layHand != null;
                         String discHand = ds.getValue(String.class);
-                        Log.d("Hand", discHand);
                         assert discHand != null;
                         String num = discHand.substring(1, discHand.length() - 1);
                         String[] str = num.split(", ");
                         ArrayList disclist = new ArrayList(Arrays.asList(str));
-
-                        Log.d("discList", disclist.toString());
-                        Log.d("size", String.valueOf(disclist.size()));
-                        Log.d("layHand", layHand);
 
                         drawPile(disclist, Long.valueOf(disclist.size()), layHand);
                     }
@@ -211,46 +200,23 @@ public class MatchActivity extends AppCompatActivity {
     public void discardPile(String matchid){
         //Get Discard Pile
         final DatabaseReference deckRef = database.getReference("Ongoing_Matches/" + matchid).child("Players");
-        deckRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                final Long deckCards = dataSnapshot.child("Deck").child("Cards").getValue(Long.class);
-                final String deckHand = dataSnapshot.child("Deck").child("Hand").getValue(String.class);
-
-                Log.d("deckHand", deckHand);
-
-                String num = deckHand.substring(1, deckHand.length() - 1);
-                String[] str = num.split(", ");
-                ArrayList<String> decklist = new ArrayList<>(Arrays.asList(str).subList(0, deckCards.intValue()));
-                final String lcard = decklist.get(deckCards.intValue()-1);
-                decklist.remove(deckCards.intValue()-1);
-                deckRef.child("Deck").child("Hand").setValue(decklist.toString());
-                deckRef.child("Deck").child("Cards").setValue(decklist.size());
-                Log.d("deckHand2", decklist.toString());
-
-                deckRef.child("Discard Pile").child("Hand").setValue("[" + lcard + "]");
-                deckRef.child("Discard Pile").child("Cards").setValue(1);
-
-                deckRef.child("Discard Pile").addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String totalDisc = dataSnapshot.child("Hand").getValue(String.class);
+            deckRef.child("Discard Pile").addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    String totalDisc = dataSnapshot.child("Hand").getValue(String.class);
+                    if(totalDisc!=null && !totalDisc.equals("-")){
                         Log.d("totalDisc", totalDisc);
                         String realLast = totalDisc.substring(totalDisc.length() - 5, totalDisc.length() - 1);
                         Log.d("realLast", realLast);
                         String PACKAGE_NAME = getApplicationContext().getPackageName();
-                        int imgId = getResources().getIdentifier(PACKAGE_NAME+":drawable/"+realLast , null, null);
-                        discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(),imgId));
+                        int imgId = getResources().getIdentifier(PACKAGE_NAME + ":drawable/" + realLast, null, null);
+                        discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(), imgId));
                     }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                    }
-                });
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-            }
-        });
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
     }
 
 
@@ -324,7 +290,7 @@ public class MatchActivity extends AppCompatActivity {
             pileMap.put(layName + (n + 1), iv);
 
             //Imageview attributes
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 200);
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 230);
             if (n == 0) {
                 layoutParams.setMarginStart(20);
             } else {
@@ -373,9 +339,6 @@ public class MatchActivity extends AppCompatActivity {
                 }
 
                 if(hand!=null && !hand.equals("-")) {
-                    Log.d("round", String.valueOf(round));
-                    Log.d("hand", hand);
-                    Log.d("cards", String.valueOf(cards));
                     drawCards(playerHand, cards);
                 }
             }
@@ -402,13 +365,9 @@ public class MatchActivity extends AppCompatActivity {
                 String num = hand.substring(1,hand.length()-1);
                 String[] str = num.split(", ");
                 assert dcards != null;
-                Log.d("dcards", dcards.toString());
                 ArrayList<String> decklist = new ArrayList<>(Arrays.asList(str).subList(0, dcards.intValue()));
                 String lcard = decklist.get(dcards.intValue()-1);
                 decklist.remove(dcards.intValue()-1);
-                Log.d("deck hand", decklist.toString());
-                Log.d("deck cards", String.valueOf(dcards.intValue()-1));
-
 
                 String hand2 = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
                 Long dcards2 = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
@@ -418,8 +377,6 @@ public class MatchActivity extends AppCompatActivity {
                 assert dcards2 != null;
                 playerHand = new ArrayList<>(Arrays.asList(str2).subList(0, dcards2.intValue()));
                 playerHand.add(lcard);
-                Log.d("Player cards", String.valueOf(playerHand.size()));
-                Log.d("Hand", playerHand.toString());
 
                 handRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
                 handRef.child("Players").child("Deck").child("Cards").setValue(dcards.intValue()-1);
@@ -462,8 +419,6 @@ public class MatchActivity extends AppCompatActivity {
                 Toast.makeText(this, "No cards picked", Toast.LENGTH_SHORT).show();
                 break;
             case 1:
-                Log.d("picked", String.valueOf(picked));
-
                 final int pick2 = picked;
                 final DatabaseReference discRef = database.getReference("Ongoing_Matches/" + match_id).child("Players");
 
@@ -474,18 +429,14 @@ public class MatchActivity extends AppCompatActivity {
                         String num = pHand.substring(1, pHand.length() - 1);
                         String[] str = num.split(", ");
                         playerHand = new ArrayList<>(Arrays.asList(str));
-                        Log.d("playerHand", playerHand.toString());
                         String dCard = playerHand.get(pick2);
                         playerHand.remove(pick2);
-                        Log.d("playerHand", playerHand.toString());
 
                         String dHand = dataSnapshot.child("Discard Pile").child("Hand").getValue(String.class);
                         String dnum = dHand.substring(1, dHand.length() - 1);
                         String[] dstr = dnum.split(", ");
                         ArrayList<String> discHand = new ArrayList<>(Arrays.asList(dstr));
-                        Log.d("discHand", discHand.toString());
                         discHand.add(dCard);
-                        Log.d("discHand", discHand.toString());
 
                         discRef.child("Discard Pile").child("Hand").setValue(discHand.toString());
                         discRef.child("Discard Pile").child("Cards").setValue(discHand.size());
@@ -527,8 +478,6 @@ public class MatchActivity extends AppCompatActivity {
 
     public void Meld(View view){
 
-        Log.d("packed", String.valueOf(packed));
-
         int pickCount = 0;
         final int[] picked = new int[packed];
         int count = 0;
@@ -562,8 +511,6 @@ public class MatchActivity extends AppCompatActivity {
                         trio[0] = str[picked[0]];
                         trio[1] = str[picked[1]];
                         trio[2] = str[picked[2]];
-                        Log.d("Picked", Arrays.toString(picked));
-                        Log.d("Trio", Arrays.toString(trio));
                         int cReal = 0;
                         int cWcard = 0;
                         int[] cRank = new int[3];
@@ -577,20 +524,16 @@ public class MatchActivity extends AppCompatActivity {
                             cReal = cReal + 1;
                         }
 
-                        Log.d("Array", Arrays.toString(cRank));
-
                         int mFq = mostFrequent(cRank, 3).get("res");
                         int fq = mostFrequent(cRank, 3).get("max count");
-                        Log.d("Most", String.valueOf(mFq));
-                        Log.d("FQ", String.valueOf(fq));
+                        int wcFq = leastFrequent(cRank, 3).get("res");
+                        int wcfq = leastFrequent(cRank, 3).get("max count");
 
-                        if (fq > 1 && mFq != 0) {
+                        if (fq > 1 && mFq != 0 && (wcfq==cWcard || cWcard==0)) {
                             ArrayList<String> handlist = new ArrayList<>(Arrays.asList(str));
-                            Log.d("handlist", handlist.toString());
                             handlist.remove(picked[0]);
                             handlist.remove(picked[1] - 1);
                             handlist.remove(picked[2] - 2);
-                            Log.d("handlist2", handlist.toString());
                             discRef.child(playerName).child("Hand").setValue(handlist.toString());
                             discRef.child(playerName).child("Cards").setValue(str.length - 3);
                             drawCards(handlist, Long.valueOf(str.length - 3));
@@ -677,6 +620,45 @@ public class MatchActivity extends AppCompatActivity {
         map.put("max count", max_count);
 
         return map;
+    }
+
+
+    public Map<String, Integer> leastFrequent(int[] arr, int n) {
+
+        // Sort the array
+        Arrays.sort(arr);
+
+        Map<String, Integer> lmap = new HashMap<>();
+
+        // find the min frequency using
+        // linear traversal
+        int min_count = n+1, res = -1;
+        int curr_count = 1;
+
+        for (int i = 1; i < n; i++) {
+            if (arr[i] == arr[i - 1])
+                curr_count++;
+            else {
+                if (curr_count < min_count) {
+                    min_count = curr_count;
+                    res = arr[i - 1];
+                }
+
+                curr_count = 1;
+            }
+        }
+
+        // If last element is least frequent
+        if (curr_count < min_count)
+        {
+            min_count = curr_count;
+            res = arr[n - 1];
+        }
+
+        lmap.put("res", res);
+        lmap.put("max count", min_count);
+
+        return lmap;
     }
 
 }

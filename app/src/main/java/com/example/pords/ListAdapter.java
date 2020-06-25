@@ -293,8 +293,9 @@ public class ListAdapter extends ArrayAdapter<String>{
 
         handz = deck.dealHands(match_size.intValue());
 
-        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(deck.arrayDeck().toString());
-        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Discard Pile").child("Hand").setValue("-");
+        final ArrayList<String> decklist =deck.arrayDeck();
+
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(decklist.toString());
 
         final ArrayList<String> Order = new ArrayList<>();
         for (int c = 0; c < match_size; c++) {
@@ -323,6 +324,17 @@ public class ListAdapter extends ArrayAdapter<String>{
                         playersRef.child("Players").child("Deck").child("Cards").setValue(108 - 11*size);
                     }
                 }
+
+                final String lcard = decklist.get(decklist.size() - 1);
+                Log.d("lcard", lcard);
+                Log.d("decklist.size()", String.valueOf(decklist.size()));
+                decklist.remove(decklist.size() - 1);
+                playersRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
+                playersRef.child("Players").child("Deck").child("Cards").setValue(decklist.size());
+                Log.d("deckHand2", decklist.toString());
+
+                playersRef.child("Players").child("Discard Pile").child("Hand").setValue("[" + lcard + "]");
+                playersRef.child("Players").child("Discard Pile").child("Cards").setValue(1);
 
             }
 
