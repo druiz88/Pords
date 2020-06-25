@@ -74,6 +74,14 @@ public class MatchActivity extends AppCompatActivity {
         btn_set = findViewById(R.id.btn_set);
         discardPile = findViewById(R.id.imageViewDiscard);
         Hand1 = findViewById(R.id.Hand1);
+
+        Hand6 = findViewById(R.id.Hand6);
+
+        Hand11 = findViewById(R.id.Hand11);
+
+
+        layMap = new HashMap<>();
+        Hand1 = findViewById(R.id.Hand1);
         Hand2 = findViewById(R.id.Hand2);
         Hand3 = findViewById(R.id.Hand3);
         Hand4 = findViewById(R.id.Hand4);
@@ -105,6 +113,7 @@ public class MatchActivity extends AppCompatActivity {
         layMap.put("Hand13", R.id.Hand13);
         layMap.put("Hand14", R.id.Hand14);
         layMap.put("Hand15", R.id.Hand15);
+
 
         //Get intents
         Intent intent = getIntent();

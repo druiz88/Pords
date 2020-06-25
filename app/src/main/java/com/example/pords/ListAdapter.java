@@ -326,12 +326,9 @@ public class ListAdapter extends ArrayAdapter<String>{
                 }
 
                 final String lcard = decklist.get(decklist.size() - 1);
-                Log.d("lcard", lcard);
-                Log.d("decklist.size()", String.valueOf(decklist.size()));
                 decklist.remove(decklist.size() - 1);
                 playersRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
                 playersRef.child("Players").child("Deck").child("Cards").setValue(decklist.size());
-                Log.d("deckHand2", decklist.toString());
 
                 playersRef.child("Players").child("Discard Pile").child("Hand").setValue("[" + lcard + "]");
                 playersRef.child("Players").child("Discard Pile").child("Cards").setValue(1);
