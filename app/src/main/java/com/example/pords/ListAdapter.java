@@ -22,6 +22,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -295,7 +296,7 @@ public class ListAdapter extends ArrayAdapter<String>{
 
         final ArrayList<String> decklist =deck.arrayDeck();
 
-        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(decklist.toString());
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(decklist);
 
         final ArrayList<String> Order = new ArrayList<>();
         for (int c = 0; c < match_size; c++) {
@@ -317,7 +318,9 @@ public class ListAdapter extends ArrayAdapter<String>{
                     if (!decker.equals("Deck") && !decker.equals("Discard Pile")) {
                         playersRef.child("Players").child(snapshot.getKey()).child("Order").setValue(Long.parseLong(Order.get(z)));
                         playersRef.child("Players").child(snapshot.getKey()).child("Cards").setValue(11);
-                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + (Long.parseLong(Order.get(z))+1)).toString());
+                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + (Long.parseLong(Order.get(z))+1)));
+                        playersRef.child("Players").child(snapshot.getKey()).child("Purchases").setValue(0);
+                        playersRef.child("Players").child(snapshot.getKey()).child("Meld").setValue(0);
                         z = z + 1;
                     } else if (decker.equals("Deck")) {
                         Long size = dataSnapshot.child("Size").getValue(Long.class);
@@ -327,10 +330,10 @@ public class ListAdapter extends ArrayAdapter<String>{
 
                 final String lcard = decklist.get(decklist.size() - 1);
                 decklist.remove(decklist.size() - 1);
-                playersRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
+                playersRef.child("Players").child("Deck").child("Hand").setValue(decklist);
                 playersRef.child("Players").child("Deck").child("Cards").setValue(decklist.size());
 
-                playersRef.child("Players").child("Discard Pile").child("Hand").setValue("[" + lcard + "]");
+                playersRef.child("Players").child("Discard Pile").child("Hand").setValue(Collections.singletonList(lcard));
                 playersRef.child("Players").child("Discard Pile").child("Cards").setValue(1);
 
             }

@@ -5,6 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/table"
     tools:context=".MatchActivity">
 
 
@@ -15,7 +16,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:onClick="Sort"
-        android:text="SORT"
+        android:text="ORDENAR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_disc" />
 
@@ -40,7 +41,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:onClick="discard"
-        android:text="DISCARD"
+        android:text="DESCARTAR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_start"
         tools:ignore="OnClick" />
@@ -51,7 +52,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:text="TextView"
-        android:textColor="#000"
+        android:textColor="#EFB851"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -94,7 +95,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:onClick="Start"
-        android:text="DRAW"
+        android:text="ROBAR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_buy"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
@@ -104,7 +105,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="Buy"
-        android:text="BUY"
+        android:text="COMPRAR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
@@ -115,7 +116,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:onClick="Meld"
-        android:text="MELD"
+        android:text="BAJARSE"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button2"
         app:layout_constraintTop_toBottomOf="@+id/linear" />
@@ -125,8 +126,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:onClick="Meld"
-        android:text="SET"
+        android:onClick="Set"
+        android:text="ACOMODAR"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_meld"
         app:layout_constraintTop_toBottomOf="@+id/linear" />

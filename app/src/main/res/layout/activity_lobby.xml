@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:backgroundTint="#FFF"
+    android:background="@drawable/telefunken2"
     tools:context=".LobbyActivity">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingLeft="10dp"
-            android:textColor="#000"
+            android:textColor="#EFB851"
             android:textStyle="bold"
             android:layout_weight="1"
             android:text="TextView" />
@@ -34,9 +34,11 @@
         <Button
             android:id="@+id/lob_create"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="CREATE MATCH" />
+            android:background="@drawable/button"
+            android:text="CREAR PARTIDA"
+            android:textColor="#FFF" />
 
         <Button
             android:id="@+id/button2"
@@ -61,7 +63,10 @@
         <ListView
             android:id="@+id/listView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:divider="#FFF"
+            android:dividerHeight="1dp"/>
+
     </LinearLayout>
 
 </LinearLayout>

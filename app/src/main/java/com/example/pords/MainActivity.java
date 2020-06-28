@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                                 purgeRef.child("Players").child(snaps.getKey()).child("Cards").removeValue();
                                 purgeRef.child("Players").child(snaps.getKey()).child("Hand").setValue("-");
                                 purgeRef.child("Players").child(snaps.getKey()).child("Order").removeValue();
+                                purgeRef.child("Players").child(snaps.getKey()).child("Purchases").removeValue();
                                 purgeRef.child("Round").removeValue();
                                 purgeRef.child("Timer").removeValue();
                             }

@@ -56,7 +56,7 @@ public class LobbyActivity extends AppCompatActivity {
         lob_create = findViewById(R.id.lob_create);
         tvName = findViewById(R.id.tvName);
 
-        String splat = "User: " + playerName;
+        String splat = "Usuario: " + playerName;
         tvName.setText(splat);
 
         matchList = new ArrayList<>();

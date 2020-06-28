@@ -5,17 +5,19 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:backgroundTint="#FFF"
+    android:background="@drawable/telefunken"
     tools:context=".MainActivity">
 
     <EditText
         android:id="@+id/log_user"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="128dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="160dp"
+        android:background="@drawable/rounded_edittext2"
         android:ems="10"
+        android:hint="Usuario"
         android:inputType="textPersonName"
-        android:hint="Username"
+        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -23,30 +25,36 @@
     <EditText
         android:id="@+id/log_pass"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
+        android:background="@drawable/rounded_edittext"
         android:ems="10"
+        android:hint="Contraseña"
         android:inputType="textPassword"
-        android:hint="Password"
+        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/log_user" />
 
     <Button
         android:id="@+id/btn_login"
-        android:layout_width="wrap_content"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="108dp"
         android:layout_marginTop="32dp"
-        android:text="LOGIN"
+        android:background="@drawable/button"
+        android:text="ACCEDER"
+        android:textColor="#FFF"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/log_pass" />
 
     <Button
         android:id="@+id/btn_reg"
-        android:layout_width="wrap_content"
+        android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="108dp"
-        android:text="REGISTER"
+        android:background="@drawable/button"
+        android:text="REGISTRARSE"
+        android:textColor="#FFF"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/btn_login" />
 
