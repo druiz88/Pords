@@ -3,40 +3,29 @@ package com.example.pords;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.annotation.SuppressLint;
-import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.util.Log;
-import android.view.DragEvent;
+import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.GenericTypeIndicator;
-import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -76,12 +65,6 @@ public class MatchActivity extends AppCompatActivity {
         linear = findViewById(R.id.linear);
         btn_set = findViewById(R.id.btn_set);
         discardPile = findViewById(R.id.imageViewDiscard);
-        Hand1 = findViewById(R.id.Hand1);
-
-        Hand6 = findViewById(R.id.Hand6);
-
-        Hand11 = findViewById(R.id.Hand11);
-
 
         layMap = new HashMap<>();
         Hand1 = findViewById(R.id.Hand1);
@@ -148,23 +131,31 @@ public class MatchActivity extends AppCompatActivity {
                         Long order = dataSnapshot.child("Players").child(playerName).child("Order").getValue(Long.class);
 
                         btn_set.setEnabled(false);
+                        btn_set.setAlpha(0.25f);
                         btn_meld.setEnabled(false);
+                        btn_meld.setAlpha(0.25f);
                         btn_disc.setEnabled(false);
+                        btn_disc.setAlpha(0.25f);
+                        btn_buy.setEnabled(true);
+                        btn_buy.setAlpha(1f);
 
                         //Enable DRAW/DISCARD buttons only on player's turn
                         if(round!=null && nplayers!=null && order!=null && order.equals(round%nplayers)){
                             packed = 0;
                             btn_start.setEnabled(true);
+                            btn_start.setAlpha(1f);
                         } else {
                             btn_start.setEnabled(false);
+                            btn_start.setAlpha(0.25f);
                             btn_set.setEnabled(false);
+                            btn_set.setAlpha(0.25f);
                         }
 
-                        playerHand = new ArrayList<>();
-
-                        for(DataSnapshot ds : dataSnapshot.child("Players").child(playerName).child("Hand").getChildren()){
-                            playerHand.add(ds.getValue(String.class));
-                        }
+                        String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
+                        assert hand != null;
+                        String num = hand.substring(1,hand.length()-1);
+                        String[] str = num.split(", ");
+                        playerHand = new ArrayList<>(Arrays.asList(str));
 
                         //Generate hand only on this conditions
                         if(playerHand!=null && !playerHand.toString().equals("-")) {
@@ -187,13 +178,17 @@ public class MatchActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()) {
                     for (DataSnapshot ds : dataSnapshot.getChildren()) {
+
                         String layHand = ds.getKey();
                         assert layHand != null;
-                        ArrayList<String> disclist = new ArrayList<>();
-                        for(DataSnapshot ds2 : dataSnapshot.child(layHand).getChildren()){
-                            disclist.add(ds2.getValue(String.class));
-                        }
-                        drawPile(disclist, Long.valueOf(disclist.size()), layHand);
+
+                        String hand = ds.getValue(String.class);
+                        assert hand != null;
+                        String num = hand.substring(1,hand.length()-1);
+                        String[] str = num.split(", ");
+                        ArrayList<String> disclist = new ArrayList<>(Arrays.asList(str));
+
+                        drawPile(disclist, (long) disclist.size(), layHand);
                     }
                 }
             }
@@ -208,16 +203,18 @@ public class MatchActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()) {
                     for (DataSnapshot ds : dataSnapshot.getChildren()) {
-                        Long ncards = ds.child("Cards").getValue(Long.class);
-                        if(ncards!=null && ncards==0){
-                            String winner = ds.getKey();
-                            AlertDialog.Builder builder = new AlertDialog.Builder(MatchActivity.this);
-                            builder.setTitle("El Ganador es:");
-                            builder.setMessage(winner);
-                            builder.setPositiveButton("Aceptar", null);
+                        if(!ds.getKey().equals("Discard Pile") && !ds.getKey().equals("Deck")) {
+                            Long ncards = ds.child("Cards").getValue(Long.class);
+                            if (ncards != null && ncards == 0) {
+                                String winner = ds.getKey();
+                                AlertDialog.Builder builder = new AlertDialog.Builder(MatchActivity.this);
+                                builder.setTitle("El Ganador es:");
+                                builder.setMessage(winner);
+                                builder.setPositiveButton("Aceptar", null);
 
-                            AlertDialog dialog = builder.create();
-                            dialog.show();
+                                AlertDialog dialog = builder.create();
+                                dialog.show();
+                            }
                         }
                     }
                 }
@@ -236,17 +233,26 @@ public class MatchActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                discHand = new ArrayList<>();
-                for(DataSnapshot ds : dataSnapshot.getChildren()){
-                    discHand.add(ds.getValue(String.class));
+                String dhand = dataSnapshot.getValue(String.class);
+
+                if(dhand!=null && !dhand.equals("-")) {
+
+                    String dnum = dhand.substring(1, dhand.length() - 1);
+                    String[] dstr = dnum.split(", ");
+                    discHand = new ArrayList<>(Arrays.asList(dstr));
+
+                    String totalDisc = discHand.toString();
+                    if (totalDisc != null && !totalDisc.equals("-") && !totalDisc.equals("[]")) {
+                        discardPile.setVisibility(View.VISIBLE);
+                        String PACKAGE_NAME = getApplicationContext().getPackageName();
+                        int imgId = getResources().getIdentifier(PACKAGE_NAME + ":drawable/" + discHand.get(discHand.size() - 1), null, null);
+                        discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(), imgId));
+                    } else if(totalDisc.equals("[]")){
+                        discardPile.setVisibility(View.GONE);
+                    }
+
                 }
 
-                String totalDisc = discHand.toString();
-                if(totalDisc!=null && !totalDisc.equals("-") && !totalDisc.equals("[]")){
-                    String PACKAGE_NAME = getApplicationContext().getPackageName();
-                    int imgId = getResources().getIdentifier(PACKAGE_NAME + ":drawable/" + discHand.get(discHand.size()-1), null, null);
-                    discardPile.setImageBitmap(BitmapFactory.decodeResource(getResources(), imgId));
-                }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -271,11 +277,14 @@ public class MatchActivity extends AppCompatActivity {
             array[n] = false;
 
             //Imageview attributes
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 230);
-            if(n==0) {
-                layoutParams.setMarginStart(60);
+            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 85, getResources().getDisplayMetrics());
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, height);
+            if (n == 0) {
+                int mg = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+                layoutParams.setMarginStart(mg);
             } else {
-                layoutParams.setMarginStart(-90);
+                int mg2 = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, -35, getResources().getDisplayMetrics());
+                layoutParams.setMarginStart(mg2);
             }
             layoutParams.gravity = Gravity.BOTTOM;
             Objects.requireNonNull(handsMap.get("img" + (n + 1))).setLayoutParams(layoutParams);
@@ -315,6 +324,7 @@ public class MatchActivity extends AppCompatActivity {
     public void drawPile(final ArrayList<String> pHand, final Long ncards, final String layName) {
 
         ViewGroup view = findViewById(layMap.get(layName));
+        view.setVisibility(View.VISIBLE);
         view.removeAllViews();
 
         pileMap = new HashMap<>();
@@ -325,11 +335,14 @@ public class MatchActivity extends AppCompatActivity {
             pileMap.put(layName + (n + 1), iv);
 
             //Imageview attributes
-            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, 230);
+            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 85, getResources().getDisplayMetrics());
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(WRAP_CONTENT, height);
             if (n == 0) {
-                layoutParams.setMarginStart(10);
+                int mg = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+                layoutParams.setMarginStart(mg);
             } else {
-                layoutParams.setMarginStart(-120);
+                int mg2 = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, -45, getResources().getDisplayMetrics());
+                layoutParams.setMarginStart(mg2);
             }
             layoutParams.gravity = Gravity.BOTTOM;
             Objects.requireNonNull(pileMap.get(layName + (n + 1))).setLayoutParams(layoutParams);
@@ -353,14 +366,17 @@ public class MatchActivity extends AppCompatActivity {
         roundRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
                 String hand = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
                 Long cards = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
-
-                String num = hand.substring(1, hand.length() - 1);
+                assert hand != null;
+                assert cards != null;
+                String num = hand.substring(1,hand.length()-1);
                 String[] str = num.split(", ");
                 playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
+
                 Collections.sort(playerHand);
-                updateHand(playerHand.toString());
+                updateHand(playerHand);
 
                 Long round = dataSnapshot.child("Round").getValue(Long.class);
                 Long nplayers = dataSnapshot.child("Size").getValue(Long.class);
@@ -369,11 +385,13 @@ public class MatchActivity extends AppCompatActivity {
                 assert order != null;
                 if(round!=null && nplayers!=null && order.equals(round%nplayers)){
                     btn_start.setEnabled(true);
+                    btn_start.setAlpha(1f);
                 } else {
                     btn_start.setEnabled(false);
+                    btn_start.setAlpha(0.25f);
                 }
 
-                if(hand!=null && !hand.equals("-")) {
+                if(playerHand.toString()!=null && !playerHand.toString().equals("-")) {
                     drawCards(playerHand, cards);
                 }
             }
@@ -383,9 +401,9 @@ public class MatchActivity extends AppCompatActivity {
         });
     }
 
-    public void updateHand(String vHand){
+    public void updateHand(ArrayList<String> vHand){
         final DatabaseReference handRef = database.getReference("Ongoing_Matches/" + match_id).child("Players").child(playerName).child("Hand");
-        handRef.setValue(vHand);
+        handRef.setValue(vHand.toString());
     }
 
     public void drawCard(){
@@ -394,29 +412,32 @@ public class MatchActivity extends AppCompatActivity {
         handRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                String hand = dataSnapshot.child("Players").child("Deck").child("Hand").getValue(String.class);
                 Long dcards = dataSnapshot.child("Players").child("Deck").child("Cards").getValue(Long.class);
-
-                ArrayList<String> decklist = new ArrayList<>();
-
-                for(DataSnapshot ds : dataSnapshot.child("Players").child("Deck").child("Hand").getChildren()){
-                    decklist.add(ds.getValue(String.class));
-                }
+                assert hand != null;
+                assert dcards != null;
+                String num = hand.substring(1,hand.length()-1);
+                String[] str = num.split(", ");
+                ArrayList<String> decklist = new ArrayList<>(Arrays.asList(str).subList(0, dcards.intValue()));
 
                 String lcard = decklist.get(dcards.intValue()-1);
                 decklist.remove(dcards.intValue()-1);
 
-                playerHand = new ArrayList<>();
-
-                for(DataSnapshot ds : dataSnapshot.child("Players").child(playerName).child("Hand").getChildren()){
-                    playerHand.add(ds.getValue(String.class));
-                }
+                String hand2 = dataSnapshot.child("Players").child(playerName).child("Hand").getValue(String.class);
+                Long dcards2 = dataSnapshot.child("Players").child(playerName).child("Cards").getValue(Long.class);
+                assert hand2 != null;
+                assert dcards2 != null;
+                String num2 = hand2.substring(1,hand2.length()-1);
+                String[] str2 = num2.split(", ");
+                playerHand = new ArrayList<>(Arrays.asList(str2).subList(0, dcards2.intValue()));
 
                 playerHand.add(lcard);
 
-                handRef.child("Players").child("Deck").child("Hand").setValue(decklist);
+                handRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
                 handRef.child("Players").child("Deck").child("Cards").setValue(dcards.intValue()-1);
                 handRef.child("Players").child(playerName).child("Cards").setValue(playerHand.size());
-                handRef.child("Players").child(playerName).child("Hand").setValue(playerHand);
+                handRef.child("Players").child(playerName).child("Hand").setValue(playerHand.toString());
 
                 drawCards(playerHand, Long.valueOf(playerHand.size()));
             }
@@ -430,7 +451,9 @@ public class MatchActivity extends AppCompatActivity {
     public void Start(View view){
         drawCard();
         btn_start.setEnabled(false);
+        btn_start.setAlpha(0.25f);
         btn_disc.setEnabled(true);
+        btn_disc.setAlpha(1f);
 
         final DatabaseReference meldRef = database.getReference("Ongoing_Matches/" + match_id).child("Players").child(playerName).child("Meld");
         meldRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -439,6 +462,7 @@ public class MatchActivity extends AppCompatActivity {
                 Long meld = dataSnapshot.getValue(Long.class);
                 if(meld!=null && meld>1){
                     btn_set.setEnabled(true);
+                    btn_set.setAlpha(1f);
                 }
             }
             @Override
@@ -447,6 +471,7 @@ public class MatchActivity extends AppCompatActivity {
         });
 
         btn_meld.setEnabled(true);
+        btn_meld.setAlpha(1f);
 
     }
 
@@ -477,24 +502,30 @@ public class MatchActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                        playerHand = new ArrayList<>();
-                        for(DataSnapshot ds : dataSnapshot.child(playerName).child("Hand").getChildren()){
-                            playerHand.add(ds.getValue(String.class));
-                        }
+                        String hand = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
+                        Long cards = dataSnapshot.child(playerName).child("Cards").getValue(Long.class);
+                        assert hand != null;
+                        assert cards != null;
+                        String num = hand.substring(1,hand.length()-1);
+                        String[] str = num.split(", ");
+                        playerHand = new ArrayList<>(Arrays.asList(str).subList(0, cards.intValue()));
 
-                        discHand = new ArrayList<>();
-                        for(DataSnapshot ds2 : dataSnapshot.child("Discard Pile").child("Hand").getChildren()){
-                            discHand.add(ds2.getValue(String.class));
-                        }
+                        String hand2 = dataSnapshot.child("Discard Pile").child("Hand").getValue(String.class);
+                        Long cards2 = dataSnapshot.child("Discard Pile").child("Cards").getValue(Long.class);
+                        assert hand2 != null;
+                        assert cards2 != null;
+                        String num2 = hand2.substring(1,hand2.length()-1);
+                        String[] str2 = num2.split(", ");
+                        discHand = new ArrayList<>(Arrays.asList(str2).subList(0, cards2.intValue()));
 
                         String dCard = playerHand.get(pick2);
                         playerHand.remove(pick2);
 
                         discHand.add(dCard);
 
-                        discRef.child("Discard Pile").child("Hand").setValue(discHand);
+                        discRef.child("Discard Pile").child("Hand").setValue(discHand.toString());
                         discRef.child("Discard Pile").child("Cards").setValue(discHand.size());
-                        discRef.child(playerName).child("Hand").setValue(playerHand);
+                        discRef.child(playerName).child("Hand").setValue(playerHand.toString());
                         discRef.child(playerName).child("Cards").setValue(playerHand.size());
 
                         if(playerHand.size()==0){
@@ -541,28 +572,52 @@ public class MatchActivity extends AppCompatActivity {
 
                 if(purch<=7) {
 
-                    ArrayList<String> discHand = new ArrayList<>();
-                    for (DataSnapshot ds : dataSnapshot.child("Discard Pile").child("Hand").getChildren()) {
-                        discHand.add(ds.getValue(String.class));
-                    }
+                    String hand = dataSnapshot.child("Discard Pile").child("Hand").getValue(String.class);
+                    assert hand != null;
+                    String num = hand.substring(1,hand.length()-1);
+                    String[] str = num.split(", ");
+                    ArrayList<String> discHand = new ArrayList<>(Arrays.asList(str));
+
+                    String hand2 = dataSnapshot.child("Deck").child("Hand").getValue(String.class);
+                    assert hand2 != null;
+                    String num2 = hand2.substring(1,hand2.length()-1);
+                    String[] str2 = num2.split(", ");
+                    ArrayList<String> deckHand = new ArrayList<>(Arrays.asList(str2));
+
+                    Log.d("deckHand", deckHand.toString());
+                    Log.d("discHand", discHand.toString());
 
                     String lastCard = discHand.get(discHand.size() - 1);
                     discHand.remove(discHand.size() - 1);
 
-                    playerHand = new ArrayList<>();
-                    for (DataSnapshot ds : dataSnapshot.child(playerName).child("Hand").getChildren()) {
-                        playerHand.add(ds.getValue(String.class));
-                    }
+                    String dlastCard = deckHand.get(deckHand.size() - 1);
+                    deckHand.remove(deckHand.size() - 1);
+
+                    Log.d("deckHand", deckHand.toString());
+                    Log.d("discHand", discHand.toString());
+
+                    String hand3 = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
+                    assert hand3 != null;
+                    String num3 = hand3.substring(1,hand3.length()-1);
+                    String[] str3 = num3.split(", ");
+                    playerHand = new ArrayList<>(Arrays.asList(str3));
+
+                    Log.d("playerHand", playerHand.toString());
 
                     playerHand.add(lastCard);
+                    playerHand.add(dlastCard);
 
-                    buyRef.child("Discard Pile").child("Hand").setValue(discHand);
+                    Log.d("playerHand", playerHand.toString());
+
+                    buyRef.child("Discard Pile").child("Hand").setValue(discHand.toString());
                     buyRef.child("Discard Pile").child("Cards").setValue(discHand.size());
-                    buyRef.child(playerName).child("Hand").setValue(playerHand);
+                    buyRef.child("Deck").child("Hand").setValue(deckHand.toString());
+                    buyRef.child("Deck").child("Cards").setValue(deckHand.size());
+                    buyRef.child(playerName).child("Hand").setValue(playerHand.toString());
                     buyRef.child(playerName).child("Cards").setValue(playerHand.size());
                     buyRef.child(playerName).child("Purchases").setValue(purch+1);
 
-                    drawCards(playerHand, Long.valueOf(playerHand.size()));
+                    drawCards(playerHand, (long) playerHand.size());
 
                 } else {
                     Toast.makeText(MatchActivity.this, "Ha alcanzado el límite de compras", Toast.LENGTH_SHORT).show();
@@ -574,6 +629,9 @@ public class MatchActivity extends AppCompatActivity {
             public void onCancelled(@NonNull DatabaseError databaseError) {
             }
         });
+
+        btn_buy.setEnabled(false);
+        btn_buy.setAlpha(0.25f);
 
     }
 
@@ -591,20 +649,16 @@ public class MatchActivity extends AppCompatActivity {
             count = count +1;
         }
 
-        final int count2 = count;
 
         final DatabaseReference discRef = database.getReference("Ongoing_Matches/" + match_id).child("Players");
         discRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                String[] str = new String[count2];
-
-                int z = 0;
-                for(DataSnapshot ds : dataSnapshot.child(playerName).child("Hand").getChildren()){
-                    str[z] = ds.getValue(String.class);
-                    z = z+1;
-                }
+                String hand = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
+                assert hand != null;
+                String num = hand.substring(1,hand.length()-1);
+                String[] str = num.split(", ");
 
                 String[] trio = new String[packed];
                 for(int w=0 ; w<packed ; w++){
@@ -642,7 +696,7 @@ public class MatchActivity extends AppCompatActivity {
                         handlist.remove(picked[a] - a);
                     }
 
-                    discRef.child(playerName).child("Hand").setValue(handlist);
+                    discRef.child(playerName).child("Hand").setValue(handlist.toString());
                     discRef.child(playerName).child("Cards").setValue(str.length - packed);
                     drawCards(handlist, Long.valueOf(str.length - packed));
 
@@ -650,9 +704,14 @@ public class MatchActivity extends AppCompatActivity {
                     int k = 0;
 
                     for(DataSnapshot ds : dataSnapshot.child("Piles").getChildren()){
+
+                        String phand = ds.getValue(String.class);
+                        assert phand != null;
+                        String pnum = phand.substring(1,phand.length()-1);
+                        String[] pstr = pnum.split(", ");
                         ArrayList<String> arrayPile = new ArrayList<>();
-                        for(DataSnapshot ds2 : ds.getChildren()){
-                            arrayPile.add(ds2.getValue(String.class).substring(2));
+                        for(String st : pstr){
+                            arrayPile.add(st.substring(2));
                         }
                         keyMap.put("Hand" + k, arrayPile.toString().substring(1,arrayPile.toString().length()-1).split(", "));
                         k++;
@@ -678,13 +737,16 @@ public class MatchActivity extends AppCompatActivity {
                         layHand = fqs.indexOf(mFq);
                     }
 
-                    ArrayList<String> topilelist = new ArrayList<>();
-                    for(DataSnapshot dt : dataSnapshot.child("Piles").child("Hand" + (layHand+1)).getChildren()){
-                        topilelist.add(dt.getValue(String.class));
-                    }
+                    String tphand = dataSnapshot.child("Piles").child("Hand" + (layHand+1)).getValue(String.class);
+                    assert tphand != null;
+                    String tpnum = tphand.substring(1,tphand.length()-1);
+                    String[] tpstr = tpnum.split(", ");
+
+                    ArrayList<String> topilelist = new ArrayList<>(Arrays.asList(tpstr));
+
                     topilelist.addAll(Arrays.asList(trio).subList(0, packed));
 
-                    discRef.child("Piles").child("Hand" + (layHand+1)).setValue(topilelist);
+                    discRef.child("Piles").child("Hand" + (layHand+1)).setValue(topilelist.toString());
 
                     packed = 0;
 
@@ -714,8 +776,6 @@ public class MatchActivity extends AppCompatActivity {
             count = count +1;
         }
 
-        final int count2 = count;
-
         switch (packed){
             case 0:
                 Toast.makeText(this, "No se seleccionaron cartas", Toast.LENGTH_SHORT).show();
@@ -730,20 +790,17 @@ public class MatchActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-                        String[] str = new String[count2];
+                        Long meld = dataSnapshot.child(playerName).child("Meld").getValue(Long.class);
 
-                        int z = 0;
-                        for(DataSnapshot ds : dataSnapshot.child(playerName).child("Hand").getChildren()){
-                            str[z] = ds.getValue(String.class);
-                            z = z+1;
-                        }
+                        String hand = dataSnapshot.child(playerName).child("Hand").getValue(String.class);
+                        assert hand != null;
+                        String num = hand.substring(1,hand.length()-1);
+                        String[] str = num.split(", ");
 
                         String[] trio = new String[3];
                         trio[0] = str[picked[0]];
                         trio[1] = str[picked[1]];
                         trio[2] = str[picked[2]];
-
-                        Log.d("trio", Arrays.toString(trio));
 
                         int cReal = 0;
                         int cWcard = 0;
@@ -768,7 +825,7 @@ public class MatchActivity extends AppCompatActivity {
                             handlist.remove(picked[0]);
                             handlist.remove(picked[1] - 1);
                             handlist.remove(picked[2] - 2);
-                            discRef.child(playerName).child("Hand").setValue(handlist);
+                            discRef.child(playerName).child("Hand").setValue(handlist.toString());
                             discRef.child(playerName).child("Cards").setValue(str.length - 3);
                             drawCards(handlist, Long.valueOf(str.length - 3));
 
@@ -789,11 +846,9 @@ public class MatchActivity extends AppCompatActivity {
                                 layHand = "Hand" + (pileCount+1);
                             }
 
-                            discRef.child("Piles").child(layHand).setValue(disclist);
+                            discRef.child("Piles").child(layHand).setValue(disclist.toString());
 
                             packed = 0;
-
-                            Long meld = dataSnapshot.child(playerName).child("Meld").getValue(Long.class);
 
                             discRef.child(playerName).child("Meld").setValue(meld+1);
 

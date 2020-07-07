@@ -51,8 +51,8 @@ public class Deck {
 
         for(int ncards = 0; ncards < 11; ncards++) {
             for (int cardDealt = 0; cardDealt < nPlayers; cardDealt++) {
-                dcards[cardDealt][ncards] = cards_list.get(0);
-                cards_list.remove(0);
+                dcards[cardDealt][ncards] = cards_list.get(cards_list.size()-1);
+                cards_list.remove(cards_list.size()-1);
             }
         }
 

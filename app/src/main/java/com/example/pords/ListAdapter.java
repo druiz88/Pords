@@ -111,7 +111,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                                 final FloatingActionButton btn = playerList.get("fab" + matched);
                                 assert btn != null;
                                 btn.setEnabled(true);
-                                DrawableCompat.setTintList(DrawableCompat.wrap(btn.getDrawable()), ColorStateList.valueOf(Color.BLUE));
+                                DrawableCompat.setTintList(DrawableCompat.wrap(btn.getDrawable()), ColorStateList.valueOf(Color.WHITE));
                             } else {
                                 final FloatingActionButton btn = playerList.get("fab" + match_id);
                                 assert btn != null;
@@ -165,7 +165,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long inmatch = dataSnapshot.getValue(Long.class);
                         if(inmatch!=null){
-                            Toast.makeText(context, "User already in Match #" + inmatch, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "El usuario ya está en la Partida #" + inmatch, Toast.LENGTH_SHORT).show();
                         } else {
                             //Update match status
                             updateJoinedMatchStats(match_id);
@@ -188,7 +188,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         Long inmatch = dataSnapshot.getValue(Long.class);
                         if(inmatch!=Long.parseLong(match_id)){
-                            Toast.makeText(context, "User is in Match #" + inmatch, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "El usuario está en la Partida #" + inmatch, Toast.LENGTH_SHORT).show();
                         } else {
                             //Update match status
                             updateAbandonedMatchStats(match_id);
@@ -216,10 +216,10 @@ public class ListAdapter extends ArrayAdapter<String>{
                 Long aSize = snapshot.child("Size").getValue(Long.class);
                 Long bCount = aCount +1;
                 if(aCount.equals(aSize)){
-                    Toast.makeText(context, "This Match is full", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "La partida está llena", Toast.LENGTH_SHORT).show();
                 } else {
                     JoinMatch(Long.parseLong(idmatch),bCount);
-                    Toast.makeText(context, "Joined Match #" + idmatch, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "Se unió a la partida #" + idmatch, Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -273,7 +273,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                         for(int i=0; i<players.size(); i++){
                             matchData.child("Player" + (i+1)).setValue(players.get(i));
                         }
-                        Toast.makeText(context, "User abandoned Match #" + idmatch, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Has abandonado la Partida #" + idmatch, Toast.LENGTH_SHORT).show();
                     }
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -296,7 +296,7 @@ public class ListAdapter extends ArrayAdapter<String>{
 
         final ArrayList<String> decklist =deck.arrayDeck();
 
-        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(decklist);
+        database.getReference("Ongoing_Matches/" + match_id).child("Players").child("Deck").child("Hand").setValue(decklist.toString());
 
         final ArrayList<String> Order = new ArrayList<>();
         for (int c = 0; c < match_size; c++) {
@@ -318,7 +318,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                     if (!decker.equals("Deck") && !decker.equals("Discard Pile")) {
                         playersRef.child("Players").child(snapshot.getKey()).child("Order").setValue(Long.parseLong(Order.get(z)));
                         playersRef.child("Players").child(snapshot.getKey()).child("Cards").setValue(11);
-                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + (Long.parseLong(Order.get(z))+1)));
+                        playersRef.child("Players").child(snapshot.getKey()).child("Hand").setValue(handz.get("n" + (Long.parseLong(Order.get(z))+1)).toString());
                         playersRef.child("Players").child(snapshot.getKey()).child("Purchases").setValue(0);
                         playersRef.child("Players").child(snapshot.getKey()).child("Meld").setValue(0);
                         z = z + 1;
@@ -330,10 +330,10 @@ public class ListAdapter extends ArrayAdapter<String>{
 
                 final String lcard = decklist.get(decklist.size() - 1);
                 decklist.remove(decklist.size() - 1);
-                playersRef.child("Players").child("Deck").child("Hand").setValue(decklist);
+                playersRef.child("Players").child("Deck").child("Hand").setValue(decklist.toString());
                 playersRef.child("Players").child("Deck").child("Cards").setValue(decklist.size());
 
-                playersRef.child("Players").child("Discard Pile").child("Hand").setValue(Collections.singletonList(lcard));
+                playersRef.child("Players").child("Discard Pile").child("Hand").setValue("[" + lcard + "]");
                 playersRef.child("Players").child("Discard Pile").child("Cards").setValue(1);
 
             }

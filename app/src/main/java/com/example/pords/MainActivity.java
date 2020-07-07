@@ -7,14 +7,17 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -28,6 +31,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -36,9 +40,10 @@ public class MainActivity extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationProviderClient;
     EditText et_user, et_pass;
-    Button btn_login, btn_reg, btn_purge;
+    Button btn_login, btn_purge;
     FirebaseDatabase database;
     String key, adLine;
+    TextView txt_reg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +61,9 @@ public class MainActivity extends AppCompatActivity {
         et_user = findViewById(R.id.log_user);
         et_pass = findViewById(R.id.log_pass);
         btn_login = findViewById(R.id.btn_login);
-        btn_reg = findViewById(R.id.btn_reg);
         btn_purge = findViewById(R.id.btn_purge);
+        txt_reg = findViewById(R.id.txt_reg);
+
 
 
         btn_purge.setOnClickListener(new View.OnClickListener() {
@@ -93,8 +99,8 @@ public class MainActivity extends AppCompatActivity {
         btn_login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final String etuser = et_user.getText().toString();
-                final String etpass = et_pass.getText().toString();
+                final String etuser = et_user.getText().toString().trim();
+                final String etpass = et_pass.getText().toString().trim();
 
                 //Compare password method
                 DatabaseReference usersRef = database.getReference("Users");
@@ -103,26 +109,26 @@ public class MainActivity extends AppCompatActivity {
                     @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for (DataSnapshot child: dataSnapshot.getChildren()) {
-                            key = Objects.requireNonNull(child.getKey());
+                        for(DataSnapshot ds : dataSnapshot.getChildren()){
+                            key = ds.getKey();
                         }
+
                         if(key != null) {
                             //Use key to pair password
                             String pass = dataSnapshot.child(key).child("Password").getValue(String.class);
                             assert pass != null;
                             if (pass.equals(etpass)) {
                                 loginUser(etuser);
-                                Toast.makeText(MainActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "Acceso permitido", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(MainActivity.this, LobbyActivity.class);
                                 intent.putExtra("player", etuser);
                                 intent.putExtra("key", key);
                                 startActivity(intent);
-                                finish();
                             } else {
-                                Toast.makeText(MainActivity.this, "Wrong Password", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            Toast.makeText(MainActivity.this, "User not registered", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(MainActivity.this, "Usuario no registrado", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -137,12 +143,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         //Register button click
-        btn_reg.setOnClickListener(new View.OnClickListener() {
+        txt_reg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                txt_reg.setTextColor(Color.rgb(0,170,228));
                 Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
                 startActivity(intent);
-                finish();
             }
         });
     }

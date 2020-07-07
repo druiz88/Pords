@@ -103,7 +103,7 @@ public class LobbyActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         inmatch = dataSnapshot.getValue(Long.class);
                         if(inmatch!=null){
-                            Toast.makeText(LobbyActivity.this, "User already in Match #" + inmatch, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(LobbyActivity.this, "El usuario ya está en la Partida #" + inmatch, Toast.LENGTH_SHORT).show();
                         } else {
                             //Check last match
                             DatabaseReference matchRef = database.getReference("Matches_Data");
@@ -198,10 +198,10 @@ public class LobbyActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 if(spinner.getSelectedItem().toString().equalsIgnoreCase("Pick players number")){
-                    Toast.makeText(LobbyActivity.this, "Please pick a player number", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LobbyActivity.this, "Por favor elija un número de jugadores", Toast.LENGTH_SHORT).show();
                 } else {
                     RegisterLobby(match_id);
-                    Toast.makeText(LobbyActivity.this, "Match created", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LobbyActivity.this, "Partida #" + match_id + " creada", Toast.LENGTH_SHORT).show();
                 }
             }
         });

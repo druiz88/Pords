@@ -120,7 +120,6 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
                 startActivity(intent);
-                moveTaskToBack(false);
             }
         });
 
@@ -131,7 +130,7 @@ public class RegisterActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 final DatabaseReference userRef = database.getReference("Users");
-                String name = reg_name.getText().toString();
+                final String name = reg_name.getText().toString().trim();
                 final String lname = reg_lname.getText().toString().trim();
                 final String user = reg_user.getText().toString().trim();
                 final String pass = reg_pass.getText().toString().trim();
@@ -174,7 +173,7 @@ public class RegisterActivity extends AppCompatActivity {
                             if (!dataSnapshot.exists()) {
                                 userExists = true;
                             } else {
-                                Toast.makeText(RegisterActivity.this, "User already registered", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RegisterActivity.this, "El nombre de usuario ya está registrado", Toast.LENGTH_SHORT).show();
                             }
                         }
                         @Override
@@ -189,7 +188,7 @@ public class RegisterActivity extends AppCompatActivity {
                             if (!dataSnapshot.exists()) {
                                 emailExists = true;
                             } else {
-                                Toast.makeText(RegisterActivity.this, "Email already registered", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RegisterActivity.this, "Correo electrónico ya registrado", Toast.LENGTH_SHORT).show();
                             }
                         }
                         @Override
@@ -204,7 +203,7 @@ public class RegisterActivity extends AppCompatActivity {
                             if (!dataSnapshot.exists()) {
                                 phoneExists = true;
                             } else {
-                                Toast.makeText(RegisterActivity.this, "Phone already registered", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(RegisterActivity.this, "Número ya registrado", Toast.LENGTH_SHORT).show();
                             }
                         }
                         @Override
@@ -218,11 +217,11 @@ public class RegisterActivity extends AppCompatActivity {
                         assert key != null;
                         final DatabaseReference usersData = userRef.child(key);
                         registerUser(usersData, name, lname, user, pass, email, date, phone, time, location);
-                        Toast.makeText(RegisterActivity.this, "User successfully registered", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(RegisterActivity.this, "Usuario registrado", Toast.LENGTH_SHORT).show();
                     }
 
                 } else {
-                    Toast.makeText(RegisterActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(RegisterActivity.this, "Por favor complete todos los campos", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -262,7 +261,6 @@ public class RegisterActivity extends AppCompatActivity {
         usersData.child("Time").setValue(time);
         usersData.child("Location").setValue(location);
 
-        Toast.makeText(RegisterActivity.this, "User successfully registered", Toast.LENGTH_SHORT).show();
         Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
         startActivity(intent);
         moveTaskToBack(false);

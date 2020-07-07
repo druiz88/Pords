@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pords</string>
+    <string name="app_name">Telefunken</string>
 
     <string-array name="numlist">
         <item>"Pick players number"</item>
