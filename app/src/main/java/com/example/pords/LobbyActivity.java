@@ -4,18 +4,28 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.drawable.DrawableCompat;
+
 import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -34,7 +44,7 @@ public class LobbyActivity extends AppCompatActivity {
     ListView listView;
     List<String> matchList;
     TextView tvName;
-    Button lob_create;
+    Button lob_create, lob_abandon;
     Long lastMatch, detected_match, inmatch;
     String nPlayers, Time, playerName, playerID;
     FirebaseDatabase database;
@@ -48,18 +58,20 @@ public class LobbyActivity extends AppCompatActivity {
         //Declare variables
         database = FirebaseDatabase.getInstance();
 
-        Intent i = getIntent();
-        playerName = i.getStringExtra("player");
-        playerID = i.getStringExtra("key");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        playerName = preferences.getString("player", null);
+        playerID = preferences.getString("key", null);
 
         listView = findViewById(R.id.listView);
         lob_create = findViewById(R.id.lob_create);
+        lob_abandon = findViewById(R.id.lob_abandon);
         tvName = findViewById(R.id.tvName);
 
         String splat = "Usuario: " + playerName;
         tvName.setText(splat);
 
         matchList = new ArrayList<>();
+
 
         //Send users in match to activity
         final DatabaseReference userRef = database.getReference("Users/" + playerID).child("In_Match");
@@ -77,7 +89,6 @@ public class LobbyActivity extends AppCompatActivity {
                             intent.putExtra("playerID", playerID);
                             intent.putExtra("match_id", String.valueOf(match_id));
                             startActivity(intent);
-                            finish();
                         }
                     }
                     @Override
@@ -137,11 +148,34 @@ public class LobbyActivity extends AppCompatActivity {
 
         });
 
+
+        lob_abandon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                final DatabaseReference userLogRef = database.getReference("Users/" + playerID).child("Logged");
+
+                userLogRef.setValue("Off");
+
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences.Editor editor = preferences.edit();
+
+                if(preferences.contains("checked") && preferences.getBoolean("checked", false)) {
+                    editor.putBoolean("checked", false);
+                    editor.apply();
+                }
+
+                Intent intent = new Intent(LobbyActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
         addRoomsEventListener();
     }
 
 
     private void addRoomsEventListener(){
+
         DatabaseReference matchesRef = database.getReference("Ongoing_Matches");
         matchesRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -150,14 +184,72 @@ public class LobbyActivity extends AppCompatActivity {
                 Iterable<DataSnapshot> matches = dataSnapshot.getChildren();
                 for(DataSnapshot snapshot : matches){
                     matchList.add(snapshot.getKey());
-                    adapter = new com.example.pords.ListAdapter(LobbyActivity.this, R.layout.activity_list_adapter, matchList, playerName, playerID);
-                    listView.setAdapter(adapter);
                 }
-            }
 
+                adapter = new com.example.pords.ListAdapter(LobbyActivity.this, R.layout.activity_list_adapter, matchList, playerName, playerID);
+                listView.setAdapter(adapter);
+
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                        //Check if user is in a match
+                        final DatabaseReference inMatchRef = database.getReference("Users/" + playerID).child("In_Match");
+
+                        inMatchRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                                if(dataSnapshot.exists()){
+
+                                    final Long in_match = dataSnapshot.getValue(Long.class);
+
+                                    //Check if match has started
+                                    final DatabaseReference ongmatchRef = database.getReference("Matches_Data/" + in_match).child("Start");
+                                    ongmatchRef.addValueEventListener(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                                            if(dataSnapshot.exists()) {
+
+                                                final int index = matchList.indexOf(String.valueOf(in_match));
+
+                                                for(int x=0; x<listView.getCount(); x++) {
+                                                    if(x!=index) {
+                                                        listView.getChildAt(x).setEnabled(false);
+                                                        listView.getChildAt(x).setClickable(false);
+                                                    }
+                                                }
+
+                                                Log.d("match", String.valueOf(in_match));
+                                                Intent intent = new Intent(LobbyActivity.this, MatchActivity.class);
+                                                intent.putExtra("playerName", playerName);
+                                                intent.putExtra("playerID", playerID);
+                                                intent.putExtra("match_id", String.valueOf(in_match));
+                                                startActivity(intent);
+                                            } else {
+                                                Toast.makeText(LobbyActivity.this, "El juego todavía no ha comenzado", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                                        }
+                                    });
+                                }
+
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                });
+
+            }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         });
     }

@@ -36,6 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_weight="1"
+            android:layout_marginStart="5dp"
             android:background="@drawable/match_btn"
             android:text="CREAR PARTIDA"
             android:textColor="#FFF" />
@@ -43,16 +44,26 @@
         <Button
             android:id="@+id/button2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="Button" />
+            android:layout_marginStart="5dp"
+            android:background="@drawable/match_btn"
+            android:text="Button"
+            android:enabled="false"
+            android:clickable="false"
+            android:textColor="#FFF"/>
 
         <Button
             android:id="@+id/lob_abandon"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="40dp"
             android:layout_weight="1"
-            android:text="ABANDON" />
+            android:layout_marginStart="5dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/match_btn"
+            android:text="ABANDONAR"
+            android:textColor="#FFF"/>
+
     </LinearLayout>
 
     <LinearLayout

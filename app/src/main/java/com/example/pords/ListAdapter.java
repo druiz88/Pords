@@ -2,13 +2,16 @@ package com.example.pords;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.graphics.drawable.DrawableCompat;
 
@@ -37,7 +41,7 @@ public class ListAdapter extends ArrayAdapter<String>{
     private List<String> users;
     private LayoutInflater mInflater;
     private int mViewResourceId;
-    private FloatingActionButton itemfab, itemfab2, itemfab3;
+    private FloatingActionButton itemfab1, itemfab2, itemfab3;
     private Context context;
     FirebaseDatabase database;
     String playerName, playerID;
@@ -67,11 +71,16 @@ public class ListAdapter extends ArrayAdapter<String>{
         return i;
     }
 
+    @Override
+    public boolean isEnabled(int position){
+        return true;
+    }
+
 
     @NonNull
     @SuppressLint("ViewHolder")
     @Override
-    public View getView(int i, View view, @NonNull ViewGroup viewGroup) {
+    public View getView(final int i, View view, @NonNull final ViewGroup viewGroup) {
         view = mInflater.inflate(mViewResourceId, null);
 
         final Map<String, FloatingActionButton> playerList = new HashMap<>();
@@ -86,44 +95,78 @@ public class ListAdapter extends ArrayAdapter<String>{
             }
         }
 
-        itemfab = view.findViewById(R.id.fab5);
+        itemfab1 = view.findViewById(R.id.fab5);
         itemfab2 = view.findViewById(R.id.fab6);
         itemfab3 = view.findViewById(R.id.fab7);
         itemfab3.setEnabled(false);
+        itemfab2.setEnabled(false);
+        itemfab1.setEnabled(false);
 
         //Set start button condition
-        playerList.put("fab" + users.get(i), itemfab3);
+        playerList.put("fab3" + match_id, itemfab3);
+        playerList.put("fab2" + match_id, itemfab2);
+        playerList.put("fab1" + match_id, itemfab1);
 
-            //Check if match is full
+
         database.getReference("Ongoing_Matches/" + match_id).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Long count = dataSnapshot.child("Count").getValue(Long.class);
-                Long size = dataSnapshot.child("Size").getValue(Long.class);
-                if(count.equals(size)){
-                    //Check if user is in match
-                    database.getReference("Users/" + playerID).child("In_Match").addListenerForSingleValueEvent(new ValueEventListener() {
-                        @SuppressLint("ResourceAsColor")
-                        @Override
-                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            final Long matched = dataSnapshot.getValue(Long.class);
-                            if(matched!=null && matched.equals(Long.parseLong(match_id))){
-                                final FloatingActionButton btn = playerList.get("fab" + matched);
-                                assert btn != null;
-                                btn.setEnabled(true);
-                                DrawableCompat.setTintList(DrawableCompat.wrap(btn.getDrawable()), ColorStateList.valueOf(Color.WHITE));
-                            } else {
-                                final FloatingActionButton btn = playerList.get("fab" + match_id);
-                                assert btn != null;
-                                btn.setEnabled(false);
-                                DrawableCompat.setTintList(DrawableCompat.wrap(btn.getDrawable()), ColorStateList.valueOf(Color.GRAY));
+                final Long count = dataSnapshot.child("Count").getValue(Long.class);
+                final Long size = dataSnapshot.child("Size").getValue(Long.class);
+
+                Log.d("count", String.valueOf(count));
+                Log.d("size", String.valueOf(size));
+
+                //Check match has started
+                final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+                //Check if user is in match
+                database.getReference("Users/" + playerID).child("In_Match").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (!preferences.contains("match") && dataSnapshot.exists()) {
+
+                            //Check if match is full
+                            if(count.equals(size)) {
+                                final FloatingActionButton btn3 = playerList.get("fab3" + match_id);
+                                assert btn3 != null;
+                                btn3.setEnabled(true);
+                                DrawableCompat.setTintList(DrawableCompat.wrap(btn3.getDrawable()), ColorStateList.valueOf(Color.WHITE));
+
+                                final FloatingActionButton btn1 = playerList.get("fab1" + match_id);
+                                assert btn1 != null;
+                                btn1.setEnabled(true);
+                                DrawableCompat.setTintList(DrawableCompat.wrap(btn1.getDrawable()), ColorStateList.valueOf(Color.WHITE));
                             }
+
+                            final FloatingActionButton btn2 = playerList.get("fab2" + match_id);
+                            assert btn2 != null;
+                            btn2.setEnabled(true);
+                            DrawableCompat.setTintList(DrawableCompat.wrap(btn2.getDrawable()), ColorStateList.valueOf(Color.WHITE));
+
+                        } else {
+
+                            final FloatingActionButton btn3 = playerList.get("fab3" + match_id);
+                            assert btn3 != null;
+                            btn3.setEnabled(false);
+                            DrawableCompat.setTintList(DrawableCompat.wrap(btn3.getDrawable()), ColorStateList.valueOf(Color.GRAY));
+
+                            final FloatingActionButton btn2 = playerList.get("fab2" + match_id);
+                            assert btn2 != null;
+                            btn2.setEnabled(false);
+                            DrawableCompat.setTintList(DrawableCompat.wrap(btn2.getDrawable()), ColorStateList.valueOf(Color.GRAY));
+
+                            final FloatingActionButton btn1 = playerList.get("fab1" + match_id);
+                            assert btn1 != null;
+                            btn1.setEnabled(false);
+                            DrawableCompat.setTintList(DrawableCompat.wrap(btn1.getDrawable()), ColorStateList.valueOf(Color.GRAY));
+
                         }
-                        @Override
-                        public void onCancelled(@NonNull DatabaseError databaseError) {
-                        }
-                    });
-                }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
+                });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -144,6 +187,7 @@ public class ListAdapter extends ArrayAdapter<String>{
                         matchPlayersRef.child("Round").setValue(0);
                         DatabaseReference matchesRef = database.getReference("Matches_Data/" + match_id);
                         String time = OffsetDateTime.now(ZoneId.of("America/Lima")).format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                        DrawableCompat.setTintList(DrawableCompat.wrap(itemfab3.getDrawable()), ColorStateList.valueOf(Color.GRAY));
                         matchesRef.child("Start").setValue(time);
                     }
                     @Override
@@ -179,7 +223,7 @@ public class ListAdapter extends ArrayAdapter<String>{
         });
 
         //Abandon match
-        itemfab.setOnClickListener(new View.OnClickListener() {
+        itemfab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final DatabaseReference userMatchRef = database.getReference("Users/" + playerID).child("In_Match");
@@ -344,4 +388,7 @@ public class ListAdapter extends ArrayAdapter<String>{
         });
 
     }
+
+
+
 }

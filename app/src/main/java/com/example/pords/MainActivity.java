@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Address;
@@ -13,9 +14,12 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase database;
     String key, adLine;
     TextView txt_reg;
+    CheckBox checkBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,40 +62,78 @@ public class MainActivity extends AppCompatActivity {
         } else {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},44);
         }
+
         database = FirebaseDatabase.getInstance();
         et_user = findViewById(R.id.log_user);
         et_pass = findViewById(R.id.log_pass);
         btn_login = findViewById(R.id.btn_login);
         btn_purge = findViewById(R.id.btn_purge);
         txt_reg = findViewById(R.id.txt_reg);
+        checkBox = findViewById(R.id.checkBox);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences.Editor editor = preferences.edit();
+        if(preferences.contains("checked") && preferences.getBoolean("checked", false)) {
+            checkBox.setChecked(true);
+        } else {
+            checkBox.setChecked(false);
+        }
+
+        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(checkBox.isChecked()) {
+                    editor.putBoolean("checked", true);
+                    editor.apply();
+                }else{
+                    editor.putBoolean("checked", false);
+                    editor.apply();
+                }
+            }
+        });
+
+        if(checkBox.isChecked() && preferences.contains("player")){
+
+            String user = preferences.getString("player", null);
+            String key = preferences.getString("key", null);
+
+            Intent intent = new Intent(MainActivity.this, LobbyActivity.class);
+            intent.putExtra("player", user);
+            intent.putExtra("key", key);
+            startActivity(intent);
+            finish();
+        }
+
 
 
 
         btn_purge.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                database.getReference("Matches_Data").child("5471650401").child("Start").removeValue();
-                final DatabaseReference purgeRef = database.getReference("Ongoing_Matches").child("5471650401");
-                purgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for(DataSnapshot snaps: dataSnapshot.child("Players").getChildren()){
-                            if(Objects.equals(snaps.getKey(),"Deck") || Objects.equals(snaps.getKey(),"Discard Pile") || Objects.equals(snaps.getKey(), "Piles")){
-                                purgeRef.child("Players").child(snaps.getKey()).removeValue();
-                            } else {
-                                purgeRef.child("Players").child(snaps.getKey()).child("Cards").removeValue();
-                                purgeRef.child("Players").child(snaps.getKey()).child("Hand").setValue("-");
-                                purgeRef.child("Players").child(snaps.getKey()).child("Order").removeValue();
-                                purgeRef.child("Players").child(snaps.getKey()).child("Purchases").removeValue();
-                                purgeRef.child("Round").removeValue();
-                                purgeRef.child("Timer").removeValue();
-                            }
+        @Override
+        public void onClick(View v) {
+            database.getReference("Matches_Data").child("5471650401").child("Start").removeValue();
+            final DatabaseReference purgeRef = database.getReference("Ongoing_Matches").child("5471650401");
+            purgeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                    for(DataSnapshot snaps: dataSnapshot.child("Players").getChildren()){
+                        if(Objects.equals(snaps.getKey(),"Deck") || Objects.equals(snaps.getKey(),"Discard Pile") || Objects.equals(snaps.getKey(), "Piles")){
+                            purgeRef.child("Players").child(snaps.getKey()).removeValue();
+                        } else {
+                            purgeRef.child("Players").child(snaps.getKey()).child("Cards").removeValue();
+                            purgeRef.child("Players").child(snaps.getKey()).child("Hand").setValue("-");
+                            purgeRef.child("Players").child(snaps.getKey()).child("Order").removeValue();
+                            purgeRef.child("Players").child(snaps.getKey()).child("Score").removeValue();
+                            purgeRef.child("Players").child(snaps.getKey()).child("Meld").removeValue();
+                            purgeRef.child("Players").child(snaps.getKey()).child("Purchases").removeValue();
+                            purgeRef.child("Round").removeValue();
+                            purgeRef.child("Timer").removeValue();
                         }
                     }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                    }
-                });
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+                }
+            });
             }
         });
 
@@ -103,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                 final String etpass = et_pass.getText().toString().trim();
 
                 //Compare password method
-                DatabaseReference usersRef = database.getReference("Users");
+                final DatabaseReference usersRef = database.getReference("Users");
                 //Get user key
                 usersRef.orderByChild("User").equalTo(etuser).addListenerForSingleValueEvent(new ValueEventListener() {
                     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -117,13 +160,25 @@ public class MainActivity extends AppCompatActivity {
                             //Use key to pair password
                             String pass = dataSnapshot.child(key).child("Password").getValue(String.class);
                             assert pass != null;
+
                             if (pass.equals(etpass)) {
-                                loginUser(etuser);
-                                Toast.makeText(MainActivity.this, "Acceso permitido", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(MainActivity.this, LobbyActivity.class);
-                                intent.putExtra("player", etuser);
-                                intent.putExtra("key", key);
-                                startActivity(intent);
+
+                                String logged = dataSnapshot.child(key).child("Logged").getValue(String.class);
+
+                                if(logged!=null && logged.equals("On")){
+                                    Toast.makeText(MainActivity.this, "El usuario ya está conectado", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    usersRef.child(key).child("Logged").setValue("On");
+                                    editor.putString("key", key);
+                                    editor.putString("player", etuser);
+                                    editor.apply();
+                                    loginUser(etuser);
+                                    Toast.makeText(MainActivity.this, "Acceso permitido", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(MainActivity.this, LobbyActivity.class);
+                                    startActivity(intent);
+                                    finish();
+                                }
+
                             } else {
                                 Toast.makeText(MainActivity.this, "Contraseña incorrecta", Toast.LENGTH_SHORT).show();
                             }
